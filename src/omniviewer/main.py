@@ -16,6 +16,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
+from omniviewer.properties import PropertyPanel
 from omniviewer.registry import default_registry
 from omniviewer.settings import AppSettings
 from omniviewer.tree import FileTreePanel
@@ -80,6 +81,9 @@ class MainWindow(QMainWindow):
 
         self.viewer_layout.addWidget(self.header_widget)
 
+        self.viewer_splitter = QSplitter(Qt.Orientation.Horizontal)
+        self.viewer_layout.addWidget(self.viewer_splitter, stretch=1)
+
         # Viewer container
         self.viewer_container = QWidget()
         self.viewer_container_layout = QVBoxLayout(self.viewer_container)
@@ -88,7 +92,12 @@ class MainWindow(QMainWindow):
         self.placeholder_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.viewer_container_layout.addWidget(self.placeholder_label)
 
-        self.viewer_layout.addWidget(self.viewer_container, stretch=1)
+        self.viewer_splitter.addWidget(self.viewer_container)
+
+        # Property Panel
+        self.property_panel = PropertyPanel()
+        self.viewer_splitter.addWidget(self.property_panel)
+        self.viewer_splitter.setSizes([600, 200])
 
         self.current_viewer: BaseViewer | None = None
 
@@ -161,6 +170,8 @@ class MainWindow(QMainWindow):
 
         self.current_viewer = viewer
         self.viewer_container_layout.addWidget(viewer)
+        
+        self.property_panel.update_for_file(path)
 
     ## @brief Поменять панели местами.
     #
