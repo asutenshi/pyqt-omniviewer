@@ -58,7 +58,7 @@ class PygmentsHighlighter(QSyntaxHighlighter):
                 if fmt:
                     self.setFormat(current_pos, t_len, fmt)
                 current_pos += t_len
-        except Exception:
+        except Exception:  # noqa: S110
             pass
 
 ## @brief Просмотрщик обычного текста и исходного кода.
@@ -180,7 +180,7 @@ class TextViewer(BaseViewer):
                         lexer = get_lexer_by_name("ini")
                     else:
                         lexer = TextLexer()
-                except Exception:
+                except Exception:  # noqa: S110
                     pass
         
         # Remove old highlighter

@@ -4,6 +4,7 @@ from PyQt6.QtCore import QMimeDatabase
 
 from omniviewer.viewers.base import BaseViewer
 from omniviewer.viewers.fallback import FallbackViewer
+from omniviewer.viewers.image import ImageViewer
 from omniviewer.viewers.text import TextViewer
 
 
@@ -18,6 +19,7 @@ class ViewerRegistry:
         # Регистрируем FallbackViewer по умолчанию
         self.register(FallbackViewer)
         self.register(TextViewer)
+        self.register(ImageViewer)
 
     def register(self, viewer_cls: type[BaseViewer]) -> None:
         """Регистрирует класс просмотрщика в реестре."""
