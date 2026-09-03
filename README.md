@@ -26,7 +26,7 @@ Python + PyQt6. Всё рендерится программно, **без за�
 | Группа | Форматы |
 |---|---|
 | Текст / код | txt, любой исходный код (подсветка), json, yaml, xml, toml, ini, log |
-| Разметка | Markdown, HTML, MHTML, XHTML |
+| Разметка | Markdown, HTML, MHTML, XHTML (базовый HTML4/CSS2.1 движком Qt) |
 | Документы | PDF, EPUB, MOBI, FB2, CBZ, XPS, DOCX, DOC, ODT, RTF |
 | Таблицы | XLSX, XLS, ODS, CSV, TSV |
 | Презентации | PPTX, PPT, ODP |
@@ -72,7 +72,9 @@ xdg-open docs/html/index.html
 
 ## Стек и ключевые решения
 
-- **PyQt6**, `PyQt6-WebEngine` — для HTML / сложного SVG / ipynb.
+- **PyQt6** (только ядро Qt). `PyQt6-WebEngine` не используется — он многопроцессный
+  (Chromium), что противоречит требованию «без сторонних процессов». HTML / Markdown /
+  DOCX / ipynb рендерятся через `QTextBrowser`, SVG — через `QtSvg`.
 - **PyMuPDF** — PDF и электронные книги одной библиотекой (проект под **AGPL-3.0**).
 - **QtMultimedia** (FFmpeg-бэкенд) — аудио/видео; опциональный запасной движок — `python-mpv`.
 - Строго in-process: никаких вызовов `soffice`, `pdftoppm`, `ffmpeg`-CLI, `unrar`.

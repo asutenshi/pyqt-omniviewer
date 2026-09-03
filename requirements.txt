@@ -3,7 +3,8 @@
 
 # --- GUI ---
 PyQt6>=6.6
-PyQt6-WebEngine>=6.6          # HTML / MHTML / сложный SVG / ipynb
+# PyQt6-WebEngine НЕ используется: многопроцессный движок Chromium противоречит
+# требованию «без сторонних процессов». HTML/Markdown/DOCX/ipynb -> QTextBrowser.
 
 # --- Общее ---
 charset-normalizer>=3.3      # определение кодировки текста
