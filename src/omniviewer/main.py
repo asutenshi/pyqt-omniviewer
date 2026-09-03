@@ -14,6 +14,8 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
+from omniviewer.settings import AppSettings
+
 
 ## @brief Главное окно приложения.
 #
@@ -27,8 +29,9 @@ class MainWindow(QMainWindow):
 
     def __init__(self, initial_path: Path):
         super().__init__()
+        self.settings = AppSettings()
+        
         self.setWindowTitle("OmniViewer")
-        self.resize(800, 600)
 
         # Main splitter
         self.splitter = QSplitter(Qt.Orientation.Horizontal)
@@ -51,18 +54,30 @@ class MainWindow(QMainWindow):
         tree_layout.addWidget(self.swap_button)
         self.tree_panel.setLayout(tree_layout)
 
-        # Initial order: Viewer (Left), Tree (Right)
-        # Based on SPEC: Слева — область просмотра, Справа — дерево файлов
-        self.splitter.addWidget(self.viewer_panel)
-        self.splitter.addWidget(self.tree_panel)
+        # Order based on settings
+        if self.settings.tree_on_left:
+            self.splitter.addWidget(self.tree_panel)
+            self.splitter.addWidget(self.viewer_panel)
+        else:
+            self.splitter.addWidget(self.viewer_panel)
+            self.splitter.addWidget(self.tree_panel)
         
         # Set splitter sizes evenly
         self.splitter.setSizes([400, 400])
+        
+        # Restore geometry
+        geom = self.settings.window_geometry
+        if not geom.isEmpty():
+            self.restoreGeometry(geom)
+        else:
+            self.resize(800, 600)
 
         # Status bar
         self.status_bar = QStatusBar()
         self.setStatusBar(self.status_bar)
         self.status_bar.showMessage(f"Opened: {initial_path}")
+        
+        self.current_path = initial_path
 
     ## @brief Поменять панели местами.
     # 
@@ -75,6 +90,14 @@ class MainWindow(QMainWindow):
             self.splitter.insertWidget(1, self.viewer_panel)
         else:
             self.splitter.insertWidget(1, self.tree_panel)
+            
+    def closeEvent(self, event):
+        """Сохранение настроек при закрытии."""
+        self.settings.window_geometry = self.saveGeometry()
+        self.settings.tree_on_left = self.splitter.widget(0) == self.tree_panel
+        if self.current_path:
+            self.settings.last_opened_dir = self.current_path
+        super().closeEvent(event)
 
 
 def main():
@@ -83,14 +106,23 @@ def main():
     parser.add_argument(
         "path",
         nargs="?",
-        default=str(Path.home()),
+        default=None,
         help="Path to file or directory to open"
     )
     args = parser.parse_args()
 
     app = QApplication(sys.argv)
+    app.setOrganizationName("asutenshi")
+    app.setApplicationName("OmniViewer")
     
-    path = Path(args.path)
+    settings = AppSettings()
+    
+    if args.path is not None:
+        path = Path(args.path)
+    else:
+        path = settings.last_opened_dir
+        if not path.exists():
+            path = Path.home()
     
     window = MainWindow(path)
     window.show()
