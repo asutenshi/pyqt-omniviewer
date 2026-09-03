@@ -13,6 +13,8 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
+from omniviewer.settings import AppSettings
+
 
 ## @brief Прокси-модель для дерева файлов.
 #
@@ -59,6 +61,7 @@ class FileTreePanel(QWidget):
 
     def __init__(self, initial_path: Path, parent=None):
         super().__init__(parent)
+        self.settings = AppSettings()
         self.current_path = initial_path
         self.history_back = []
         self.history_forward = []
@@ -132,6 +135,7 @@ class FileTreePanel(QWidget):
         self.tree_view.header().sortIndicatorChanged.connect(self._on_header_sort_changed)
         
         layout.addWidget(self.tree_view)
+        self._apply_sorting()
 
     def _create_sort_menu(self) -> QMenu:
         menu = QMenu(self)
@@ -140,10 +144,11 @@ class FileTreePanel(QWidget):
         col_group = QActionGroup(self)
         col_group.setExclusive(True)
         
-        self.action_sort_name = QAction("Name", self, checkable=True, checked=True)
-        self.action_sort_size = QAction("Size", self, checkable=True)
-        self.action_sort_type = QAction("Type", self, checkable=True)
-        self.action_sort_date = QAction("Date Modified", self, checkable=True)
+        sf = self.settings.sort_field
+        self.action_sort_name = QAction("Name", self, checkable=True, checked=(sf == "name"))
+        self.action_sort_size = QAction("Size", self, checkable=True, checked=(sf == "size"))
+        self.action_sort_type = QAction("Type", self, checkable=True, checked=(sf == "type"))
+        self.action_sort_date = QAction("Date Modified", self, checkable=True, checked=(sf == "date"))
         
         for a in (self.action_sort_name, self.action_sort_size, self.action_sort_type, self.action_sort_date):
             col_group.addAction(a)
@@ -155,8 +160,10 @@ class FileTreePanel(QWidget):
         # Order
         order_group = QActionGroup(self)
         order_group.setExclusive(True)
-        self.action_sort_asc = QAction("Ascending", self, checkable=True, checked=True)
-        self.action_sort_desc = QAction("Descending", self, checkable=True)
+        
+        sd = self.settings.sort_direction
+        self.action_sort_asc = QAction("Ascending", self, checkable=True, checked=(sd == 0))
+        self.action_sort_desc = QAction("Descending", self, checkable=True, checked=(sd == 1))
         
         for a in (self.action_sort_asc, self.action_sort_desc):
             order_group.addAction(a)
@@ -166,7 +173,8 @@ class FileTreePanel(QWidget):
         menu.addSeparator()
         
         # Folders first
-        self.action_folders_first = QAction("Folders First", self, checkable=True, checked=True)
+        ft = self.settings.folders_on_top
+        self.action_folders_first = QAction("Folders First", self, checkable=True, checked=ft)
         self.action_folders_first.triggered.connect(self._apply_sorting)
         menu.addAction(self.action_folders_first)
 
@@ -174,15 +182,29 @@ class FileTreePanel(QWidget):
 
     def _apply_sorting(self):
         col = 0
-        if self.action_sort_size.isChecked(): col = 1
-        elif self.action_sort_type.isChecked(): col = 2
-        elif self.action_sort_date.isChecked(): col = 3
+        field = "name"
+        if self.action_sort_size.isChecked():
+            col = 1
+            field = "size"
+        elif self.action_sort_type.isChecked():
+            col = 2
+            field = "type"
+        elif self.action_sort_date.isChecked():
+            col = 3
+            field = "date"
         
         order = Qt.SortOrder.AscendingOrder
+        direction = 0
         if self.action_sort_desc.isChecked():
             order = Qt.SortOrder.DescendingOrder
+            direction = 1
             
         self.proxy_model.folders_first = self.action_folders_first.isChecked()
+        
+        self.settings.sort_field = field
+        self.settings.sort_direction = direction
+        self.settings.folders_on_top = self.proxy_model.folders_first
+        
         self.tree_view.sortByColumn(col, order)
 
     def set_root_path(self, path: Path, record_history: bool = True):
@@ -250,14 +272,28 @@ class FileTreePanel(QWidget):
             self.file_selected.emit(path)
 
     def _on_header_sort_changed(self, logicalIndex: int, order: Qt.SortOrder):
-        if logicalIndex == 0: self.action_sort_name.setChecked(True)
-        elif logicalIndex == 1: self.action_sort_size.setChecked(True)
-        elif logicalIndex == 2: self.action_sort_type.setChecked(True)
-        elif logicalIndex == 3: self.action_sort_date.setChecked(True)
+        field = "name"
+        if logicalIndex == 0:
+            self.action_sort_name.setChecked(True)
+        elif logicalIndex == 1:
+            self.action_sort_size.setChecked(True)
+            field = "size"
+        elif logicalIndex == 2:
+            self.action_sort_type.setChecked(True)
+            field = "type"
+        elif logicalIndex == 3:
+            self.action_sort_date.setChecked(True)
+            field = "date"
         
+        direction = 0
         if order == Qt.SortOrder.AscendingOrder:
             self.action_sort_asc.setChecked(True)
         else:
             self.action_sort_desc.setChecked(True)
+            direction = 1
             
         self.proxy_model.folders_first = self.action_folders_first.isChecked()
+        
+        self.settings.sort_field = field
+        self.settings.sort_direction = direction
+        self.settings.folders_on_top = self.proxy_model.folders_first

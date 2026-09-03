@@ -5,7 +5,10 @@ from PyQt6.QtCore import Qt
 from omniviewer.tree import FileTreePanel
 
 
-def test_tree_initialization(qapp, tmp_path):
+def test_tree_initialization(qapp, tmp_path, monkeypatch):
+    monkeypatch.setenv('XDG_CONFIG_HOME', str(tmp_path))
+    from omniviewer.settings import AppSettings
+    AppSettings()._settings.clear()
     panel = FileTreePanel(tmp_path)
     
     # Check widgets
@@ -24,7 +27,10 @@ def test_tree_initialization(qapp, tmp_path):
     assert panel.btn_up is not None
     assert panel.btn_home is not None
 
-def test_navigation_history(qapp, tmp_path):
+def test_navigation_history(qapp, tmp_path, monkeypatch):
+    monkeypatch.setenv('XDG_CONFIG_HOME', str(tmp_path))
+    from omniviewer.settings import AppSettings
+    AppSettings()._settings.clear()
     d1 = tmp_path / "d1"
     d2 = tmp_path / "d2"
     d1.mkdir()
@@ -51,7 +57,10 @@ def test_navigation_history(qapp, tmp_path):
     panel.go_home()
     assert panel.current_path == Path.home()
 
-def test_sorting_and_menu_sync(qapp, tmp_path):
+def test_sorting_and_menu_sync(qapp, tmp_path, monkeypatch):
+    monkeypatch.setenv('XDG_CONFIG_HOME', str(tmp_path))
+    from omniviewer.settings import AppSettings
+    AppSettings()._settings.clear()
     panel = FileTreePanel(tmp_path)
     
     # Check default menu state
@@ -75,7 +84,10 @@ def test_sorting_and_menu_sync(qapp, tmp_path):
     assert panel.tree_view.header().sortIndicatorSection() == 3
     assert panel.tree_view.header().sortIndicatorOrder() == Qt.SortOrder.AscendingOrder
 
-def test_columns(qapp, tmp_path):
+def test_columns(qapp, tmp_path, monkeypatch):
+    monkeypatch.setenv('XDG_CONFIG_HOME', str(tmp_path))
+    from omniviewer.settings import AppSettings
+    AppSettings()._settings.clear()
     panel = FileTreePanel(tmp_path)
     model = panel.proxy_model
     
@@ -85,7 +97,10 @@ def test_columns(qapp, tmp_path):
     assert model.headerData(2, Qt.Orientation.Horizontal) == "Type"
     # Note: 3 could be "Date Modified" depending on locale/system. Let's just check count for now or avoid strict string matching on Qt defaults.
 
-def test_filtering(qapp, tmp_path):
+def test_filtering(qapp, tmp_path, monkeypatch):
+    monkeypatch.setenv('XDG_CONFIG_HOME', str(tmp_path))
+    from omniviewer.settings import AppSettings
+    AppSettings()._settings.clear()
     (tmp_path / "file_abc.txt").touch()
     (tmp_path / "file_def.txt").touch()
     (tmp_path / "dir_abc").mkdir()

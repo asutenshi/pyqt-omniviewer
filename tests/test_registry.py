@@ -158,7 +158,7 @@ def test_unrecognized_file(qapp, registry, tmp_path):
 
 @pytest.mark.parametrize("rel_path", get_demo_files())
 def test_expected_mime(rel_path):
-    from PyQt6.QtCore import QMimeDatabase, QMimeType
+    from PyQt6.QtCore import QMimeDatabase
     
     expected_mime = PATH_TO_MIME.get(rel_path)
     if not expected_mime:

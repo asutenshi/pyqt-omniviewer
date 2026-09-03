@@ -1,7 +1,6 @@
 # ruff: noqa: BLE001
 import traceback
 from collections.abc import Callable
-
 from pathlib import Path
 
 from PyQt6.QtCore import QMimeType, QObject, QRunnable, QThreadPool, pyqtSignal

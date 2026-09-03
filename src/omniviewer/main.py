@@ -17,9 +17,9 @@ from PyQt6.QtWidgets import (
 )
 
 from omniviewer.registry import default_registry
+from omniviewer.settings import AppSettings
 from omniviewer.tree import FileTreePanel
 from omniviewer.viewers.base import BaseViewer
-from omniviewer.settings import AppSettings
 
 
 ## @brief Главное окно приложения.
