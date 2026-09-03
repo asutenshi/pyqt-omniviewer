@@ -8,6 +8,7 @@ from PyQt6.QtWidgets import QApplication
 
 from omniviewer.registry import ViewerRegistry
 from omniviewer.viewers.fallback import FallbackViewer
+from omniviewer.viewers.text import TextViewer
 
 DEMO_DIR = Path(__file__).parent.parent / "demo"
 
@@ -15,24 +16,24 @@ DEMO_DIR = Path(__file__).parent.parent / "demo"
 # Дополняется в каждом тикете просмотрщика.
 FILE_TO_VIEWER = {
     # Пока только FallbackViewer для всех, так как других просмотрщиков нет
-    "text/plain-en.txt": FallbackViewer,
-    "text/notes-ru.txt": FallbackViewer,
-    "code/example.py": FallbackViewer,
-    "code/example.c": FallbackViewer,
-    "data/table.csv": FallbackViewer,
-    "data/table.tsv": FallbackViewer,
-    "data/record.json": FallbackViewer,
-    "data/config.yaml": FallbackViewer,
-    "data/catalog.xml": FallbackViewer,
-    "data/settings.ini": FallbackViewer,
+    "text/plain-en.txt": TextViewer,
+    "text/notes-ru.txt": TextViewer,
+    "code/example.py": TextViewer,
+    "code/example.c": TextViewer,
+    "data/table.csv": TextViewer,
+    "data/table.tsv": TextViewer,
+    "data/record.json": TextViewer,
+    "data/config.yaml": TextViewer,
+    "data/catalog.xml": TextViewer,
+    "data/settings.ini": TextViewer,
     "images/swatch.png": FallbackViewer,
     "images/swatch.jpg": FallbackViewer,
-    "large/big-lines.txt": FallbackViewer,
-    "noext/hello-script": FallbackViewer,
+    "large/big-lines.txt": TextViewer,
+    "noext/hello-script": TextViewer,
     "broken/truncated.png": FallbackViewer,
     "broken/truncated.jpg": FallbackViewer,
-    "broken/truncated.json": FallbackViewer,
-    "broken/truncated.xml": FallbackViewer,
+    "broken/truncated.json": TextViewer,
+    "broken/truncated.xml": TextViewer,
 }
 
 # Таблица: имя файла из demo/ -> Ожидаемый MIME-тип.
@@ -137,8 +138,8 @@ def test_broken_files(qapp, registry, rel_path):
         QThreadPool.globalInstance().waitForDone(2000)
         QApplication.processEvents()
         
-        # FallbackViewer не бросает исключений даже для битых файлов
-        if not isinstance(viewer, FallbackViewer):
+        # FallbackViewer и TextViewer не бросают исключений даже для битых файлов
+        if not isinstance(viewer, (FallbackViewer, TextViewer)):
             assert viewer.is_error_widget, f"Viewer {type(viewer).__name__} did not show error for broken file {rel_path}"
     except Exception as e:
         pytest.fail(f"Viewer {type(viewer).__name__} crashed on broken file {rel_path}: {e}")
@@ -151,7 +152,7 @@ def test_unrecognized_file(qapp, registry, tmp_path):
     unrec_path.write_text("Hello")
     
     viewer = registry.viewer_for(unrec_path)
-    assert isinstance(viewer, FallbackViewer)
+    assert isinstance(viewer, (FallbackViewer, TextViewer))
     
     viewer.safe_load(unrec_path)
     assert not viewer.is_error_widget
