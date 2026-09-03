@@ -80,10 +80,9 @@ class PdfViewer(BaseViewer):
         self._zoom = 1.0
         self._tasks: list[RenderPageTask] = []
         
-        # UI
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(4)
+        # UI is managed by self._layout from BaseViewer
+        self._layout.setContentsMargins(0, 0, 0, 0)
+        self._layout.setSpacing(4)
         
         # Zoom toolbar
         toolbar = QWidget()
@@ -105,7 +104,7 @@ class PdfViewer(BaseViewer):
         tb_layout.addWidget(self.btn_zoom_in)
         tb_layout.addWidget(self.lbl_zoom)
         tb_layout.addStretch(1)
-        layout.addWidget(toolbar)
+        self._layout.addWidget(toolbar)
 
         self.scroll_area = QScrollArea(self)
         self.scroll_area.setWidgetResizable(True)
@@ -119,7 +118,7 @@ class PdfViewer(BaseViewer):
         self.content_layout.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignHCenter)
         
         self.scroll_area.setWidget(self.content_widget)
-        layout.addWidget(self.scroll_area, stretch=1)
+        self._layout.addWidget(self.scroll_area, stretch=1)
         
         self._page_labels: list[QLabel] = []
 
