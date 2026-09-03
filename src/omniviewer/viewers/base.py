@@ -20,6 +20,8 @@ class Worker(QRunnable):
         self.kwargs = kwargs
         self.signals = WorkerSignals()
         self.is_cancelled = False
+        # QRunnable has autoDelete True by default.
+        self.setAutoDelete(True)
 
     def run(self):
         try:
@@ -33,7 +35,10 @@ class Worker(QRunnable):
             if self.is_cancelled:
                 return
             tb = traceback.format_exc()
-            self.signals.error.emit(e, tb)
+            try:
+                self.signals.error.emit(e, tb)
+            except RuntimeError:
+                pass
 
 ## @brief Базовый класс для всех просмотрщиков.
 #
@@ -57,7 +62,8 @@ class BaseViewer(QWidget):
         super().__init__()
         self.is_error_widget = False
         self.error_message = ""
-        self._worker: Worker | None = None
+        self._current_worker: Worker | None = None
+        self._active_workers: set[Worker] = set()
         self._layout = QVBoxLayout(self)
 
     def safe_load(self, path: str):
@@ -86,16 +92,29 @@ class BaseViewer(QWidget):
         (выполняется в GUI-потоке). При исключении - виджет переводится в состояние ошибки.
         """
         self.cancel()
-        self._worker = Worker(fn)
-        self._worker.signals.finished.connect(on_success)
-        self._worker.signals.error.connect(self._show_error)
-        QThreadPool.globalInstance().start(self._worker)
+        worker = Worker(fn)
+        self._current_worker = worker
+        self._active_workers.add(worker)
+
+        def _on_finished(result):
+            self._active_workers.discard(worker)
+            if worker is self._current_worker and not worker.is_cancelled:
+                on_success(result)
+
+        def _on_error(e, tb):
+            self._active_workers.discard(worker)
+            if worker is self._current_worker and not worker.is_cancelled:
+                self._show_error(e, tb)
+
+        worker.signals.finished.connect(_on_finished)
+        worker.signals.error.connect(_on_error)
+        QThreadPool.globalInstance().start(worker)
 
     def cancel(self):
         """Отменяет текущую асинхронную задачу."""
-        if self._worker:
-            self._worker.is_cancelled = True
-            self._worker = None
+        if self._current_worker:
+            self._current_worker.is_cancelled = True
+            self._current_worker = None
 
     def _show_error(self, e: Exception, tb: str):
         """Отображает сообщение об ошибке с разворачиваемой трассировкой."""
