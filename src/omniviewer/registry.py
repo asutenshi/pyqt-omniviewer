@@ -1,41 +1,72 @@
+from pathlib import Path
 
-from .mime import detect_mime
-from .viewers.base import BaseViewer
+from PyQt6.QtCore import QMimeDatabase
+
+from omniviewer.viewers.base import BaseViewer
+from omniviewer.viewers.fallback import FallbackViewer
 
 
+## @brief Реестр просмотрщиков файлов.
+#
+# Отвечает за сопоставление файлов с соответствующими классами просмотрщиков
+# на основе MIME-типа (с контентным сниффингом и наследованием), расширения и приоритета.
 class ViewerRegistry:
-    """Реестр обработчиков для просмотра файлов."""
-    
     def __init__(self):
         self._viewers: list[type[BaseViewer]] = []
-        self._fallback_viewer: type[BaseViewer] | None = None
-        
-    def register(self, viewer_cls: type[BaseViewer]):
-        """Регистрирует класс просмотрщика."""
-        if not hasattr(viewer_cls, "can_handle"):
-            return
-        
-        self._viewers.append(viewer_cls)
-        # Сортируем по убыванию приоритета (высший приоритет первым)
-        self._viewers.sort(key=lambda cls: getattr(cls, "priority", 0), reverse=True)
-        
-    def set_fallback(self, viewer_cls: type[BaseViewer]):
-        """Устанавливает резервный просмотрщик (низший приоритет)."""
-        self._fallback_viewer = viewer_cls
-        
-    def viewer_for(self, path: str) -> BaseViewer:
+        self._mime_db = QMimeDatabase()
+        # Регистрируем FallbackViewer по умолчанию
+        self.register(FallbackViewer)
+
+    def register(self, viewer_cls: type[BaseViewer]) -> None:
+        """Регистрирует класс просмотрщика в реестре."""
+        if viewer_cls not in self._viewers:
+            self._viewers.append(viewer_cls)
+
+    def viewer_for(self, path: Path) -> BaseViewer:
         """
-        Возвращает экземпляр подходящего просмотрщика для файла.
+        Возвращает экземпляр подходящего BaseViewer для заданного пути.
+        При ошибке или нераспознанном типе возвращается FallbackViewer.
         """
-        mime = detect_mime(path)
-        for viewer_cls in self._viewers:
-            if viewer_cls.can_handle(path, mime):
-                return viewer_cls()
-                
-        if self._fallback_viewer:
-            return self._fallback_viewer()
-            
-        return BaseViewer() # В идеале сюда не доходим, если есть fallback
-        
-# Глобальный экземпляр реестра
-registry = ViewerRegistry()
+        viewer_cls = self.find_viewer_class(path)
+        if viewer_cls is None:
+            return FallbackViewer()
+        try:
+            return viewer_cls()
+        except Exception:  # noqa: BLE001
+            return FallbackViewer()
+
+    def find_viewer_class(self, path: Path) -> type[BaseViewer]:
+        """
+        Находит класс просмотрщика с наивысшим приоритетом для заданного пути.
+        Определяет MIME-тип с помощью контентного сниффинга (QMimeDatabase.MatchDefault).
+        При неоднозначности используется запасной поиск по расширению.
+        """
+        path_str = str(path)
+        mime_type = self._mime_db.mimeTypeForFile(path_str, QMimeDatabase.MatchMode.MatchDefault)
+
+        # Кандидаты, удовлетворяющие can_handle
+        candidates: list[type[BaseViewer]] = []
+
+        for cls in self._viewers:
+            if cls.can_handle(path, mime_type):
+                candidates.append(cls)
+
+        if not candidates:
+            # Запасная проверка чисто по расширению (MatchExtension) если контент дал неизвестно
+            ext_mime = self._mime_db.mimeTypeForFile(
+                path_str, QMimeDatabase.MatchMode.MatchExtension
+            )
+            for cls in self._viewers:
+                if cls.can_handle(path, ext_mime):
+                    candidates.append(cls)
+
+        if not candidates:
+            return FallbackViewer
+
+        # Выбираем обработчик с максимальным приоритетом
+        candidates.sort(key=lambda c: c.priority, reverse=True)
+        return candidates[0]
+
+
+# Глобальный синглтон реестра
+default_registry = ViewerRegistry()
