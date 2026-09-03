@@ -1,0 +1,59 @@
+# pyqt-omniviewer — рантайм-зависимости (pip), чистая Ubuntu 24.04, Python 3.12
+# Системные пакеты (apt) — см. install.sh и README.
+
+# --- GUI ---
+PyQt6>=6.6
+PyQt6-WebEngine>=6.6          # HTML / MHTML / сложный SVG / ipynb
+
+# --- Общее ---
+charset-normalizer>=3.3      # определение кодировки текста
+hachoir>=3.3                 # метаданные + дерево полей для экзотики
+
+# --- Текст / код / разметка ---
+Pygments>=2.18
+markdown-it-py>=3.0
+
+# --- Изображения ---
+Pillow>=10.3
+pillow-heif>=0.18            # HEIC / HEIF (+ AVIF-декод)
+pillow-avif-plugin>=1.4      # AVIF
+rawpy>=0.22                  # RAW-фото: встроенный превью-JPEG
+piexif>=1.1                  # EXIF
+
+# --- PDF / книги ---
+PyMuPDF>=1.24                # PDF, EPUB, MOBI, FB2, CBZ, XPS  (AGPL-3.0)
+
+# --- Офисные документы ---
+python-docx>=1.1
+mammoth>=1.8                 # DOCX -> HTML
+odfpy>=1.4                   # ODT / ODS / ODP
+striprtf>=0.0.26            # RTF
+python-pptx>=1.0            # PPT / PPTX
+olefile>=0.47               # legacy .doc (извлечение текста)
+
+# --- Таблицы ---
+openpyxl>=3.1               # XLSX
+xlrd>=2.0                   # XLS (legacy)
+pandas>=2.2                 # CSV / TSV (опционально, ускоряет большие таблицы)
+
+# --- Ноутбуки ---
+nbconvert>=7.16
+
+# --- Аудио / видео ---
+mutagen>=1.47               # теги и обложки
+python-mpv>=1.0             # опциональный запасной движок воспроизведения (libmpv)
+
+# --- Архивы ---
+py7zr>=0.21                 # 7z (чистый Python)
+libarchive-c>=5.1           # rar / iso / cab / lha / ar  (нужен системный libarchive13)
+
+# --- Шрифты ---
+fonttools>=4.53
+
+# --- Email ---
+extract-msg>=0.48           # Outlook .msg
+
+# --- 3D / CAD (фичефлаг, по времени) ---
+# trimesh>=4.4
+# numpy-stl>=3.1
+# ezdxf>=1.3

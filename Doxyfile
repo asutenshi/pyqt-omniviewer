@@ -1,0 +1,32 @@
+# Doxygen-конфигурация pyqt-omniviewer.
+# Сборка:  doxygen Doxyfile   ->   docs/html/index.html
+
+PROJECT_NAME           = "pyqt-omniviewer"
+PROJECT_BRIEF          = "Двухпанельный просмотрщик максимального числа типов файлов (PyQt6)"
+PROJECT_NUMBER         = 0.1.0
+
+OUTPUT_DIRECTORY       = docs
+CREATE_SUBDIRS         = NO
+GENERATE_HTML          = YES
+GENERATE_LATEX         = NO
+HTML_OUTPUT            = html
+
+INPUT                  = omniviewer README.md SPEC.md
+FILE_PATTERNS          = *.py *.md
+RECURSIVE              = YES
+USE_MDFILE_AS_MAINPAGE = README.md
+
+OPTIMIZE_OUTPUT_JAVA   = YES
+EXTENSION_MAPPING      = py=Python
+INHERIT_DOCS           = YES
+JAVADOC_AUTOBRIEF      = YES
+MARKDOWN_SUPPORT       = YES
+
+EXTRACT_ALL            = YES
+EXTRACT_PRIVATE        = NO
+EXTRACT_STATIC         = YES
+SOURCE_BROWSER         = YES
+
+QUIET                  = YES
+WARN_IF_UNDOCUMENTED   = NO
+WARN_AS_ERROR          = NO
