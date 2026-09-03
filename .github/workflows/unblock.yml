@@ -1,0 +1,71 @@
+name: unblock
+
+# Держит метки blocked / ready в актуальном состоянии по разделу
+# «## Blocked by» в теле каждой issue:
+#   - issue закрыта  -> у зависимых, где это был последний открытый блокер,
+#                       снимается `blocked`, ставится `ready`
+#   - issue открыта заново -> зависимые с `ready` возвращаются в `blocked`
+#
+# Раздел в теле issue должен выглядеть так:
+#   ## Blocked by
+#   #7, #8
+# либо: None (can start immediately)
+
+on:
+  issues:
+    types: [closed, reopened, deleted]
+
+permissions:
+  issues: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const changed = context.payload.issue.number;
+            const nowOpen = context.payload.action === 'reopened';
+
+            const all = await github.paginate(github.rest.issues.listForRepo, {
+              owner, repo, state: 'all', per_page: 100,
+            });
+            const stateByNum = new Map(all.map(i => [i.number, i.state]));
+
+            const blockersOf = (body) => {
+              const m = (body || '').match(/##\s*Blocked by\s*\r?\n+([\s\S]*?)(\r?\n#{2,3}\s|\r?\n---|\s*$)/i);
+              if (!m) return [];
+              return [...m[1].matchAll(/#(\d+)/g)].map(x => Number(x[1]));
+            };
+
+            for (const issue of all) {
+              if (issue.pull_request) continue;
+              if (issue.state !== 'open') continue;
+              const refs = blockersOf(issue.body);
+              if (!refs.includes(changed)) continue;
+
+              const labels = issue.labels.map(l => l.name || l);
+              const openBlockers = refs.filter(r => {
+                if (r === changed) return nowOpen;
+                return stateByNum.get(r) === 'open';
+              });
+
+              if (openBlockers.length === 0 && labels.includes('blocked')) {
+                await github.rest.issues.removeLabel({ owner, repo, issue_number: issue.number, name: 'blocked' }).catch(() => {});
+                await github.rest.issues.addLabels({ owner, repo, issue_number: issue.number, labels: ['ready'] });
+                await github.rest.issues.createComment({
+                  owner, repo, issue_number: issue.number,
+                  body: `Все блокеры закрыты (последний — #${changed}). Снял \`blocked\`, поставил \`ready\` — задачу можно брать.`,
+                });
+              } else if (openBlockers.length > 0 && labels.includes('ready') && !labels.includes('blocked')) {
+                await github.rest.issues.removeLabel({ owner, repo, issue_number: issue.number, name: 'ready' }).catch(() => {});
+                await github.rest.issues.addLabels({ owner, repo, issue_number: issue.number, labels: ['blocked'] });
+                await github.rest.issues.createComment({
+                  owner, repo, issue_number: issue.number,
+                  body: `Блокер #${changed} снова открыт. Вернул \`blocked\`.`,
+                });
+              }
+            }
