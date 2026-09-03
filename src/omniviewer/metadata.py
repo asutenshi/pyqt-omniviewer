@@ -114,6 +114,7 @@ def _get_pdf_metadata(path: str, meta: dict):
             for k, v in doc.metadata.items():
                 if v:
                     meta[k.capitalize()] = v
+        meta["Pages"] = str(len(doc))
         doc.close()
     except Exception:  # noqa: BLE001, S110
         pass
@@ -130,7 +131,15 @@ def metadata_for(path: str) -> dict:
         _get_image_metadata(path, meta)
     elif mime.startswith(("audio/", "video/")):
         _get_audio_metadata(path, meta)
-    elif mime == "application/pdf":
+    elif mime in (
+        "application/pdf",
+        "application/epub+zip",
+        "application/x-mobipocket-ebook",
+        "application/vnd.comicbook+zip",
+        "application/vnd.ms-xpsdocument",
+        "application/oxps",
+        "application/x-fictionbook+xml",
+    ) or path.lower().endswith(('.pdf', '.epub', '.mobi', '.fb2', '.cbz', '.xps', '.oxps')):
         _get_pdf_metadata(path, meta)
         
     if (mime.startswith(("image/", "video/"))) and "Resolution" not in meta:

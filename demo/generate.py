@@ -276,6 +276,62 @@ def _swatch_png() -> bytes:
 # --------------------------------------------------------------------------- #
 
 
+_PDF_BYTES = None
+def _write_minimal_pdf() -> bytes:
+    global _PDF_BYTES
+    if _PDF_BYTES is not None:
+        return _PDF_BYTES
+    import fitz  # type: ignore
+    doc = fitz.open()
+    page = doc.new_page(width=400, height=400)
+    page.insert_text((50, 50), "pyqt-omniviewer PDF sample", fontsize=14)
+    page = doc.new_page(width=400, height=400)
+    page.insert_text((50, 50), "Page 2", fontsize=14)
+    res = doc.write()
+    doc.close()
+    _PDF_BYTES = res
+    return res
+
+def _write_minimal_cbz() -> bytes:
+    import io
+    import zipfile
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w") as z:
+        z.writestr("page1.png", _swatch_png())
+        z.writestr("page2.jpg", _JPEG_16)
+    return buf.getvalue()
+
+def _write_minimal_epub() -> bytes:
+    import io
+    import zipfile
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w") as z:
+        z.writestr("mimetype", "application/epub+zip")
+        z.writestr("META-INF/container.xml", '<?xml version="1.0"?>\n<container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container"><rootfiles><rootfile full-path="content.opf" media-type="application/oebps-package+xml"/></rootfiles></container>')
+        z.writestr("content.opf", '<?xml version="1.0"?><package version="2.0" xmlns="http://www.idpf.org/2007/opf"><metadata xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:title>Sample EPUB</dc:title></metadata><manifest><item id="item1" href="index.html" media-type="application/xhtml+xml"/></manifest><spine><itemref idref="item1"/></spine></package>')
+        z.writestr("index.html", '<html xmlns="http://www.w3.org/1999/xhtml"><body><h1>Sample EPUB</h1></body></html>')
+    return buf.getvalue()
+
+def _write_minimal_fb2() -> bytes:
+    return b'<?xml version="1.0" encoding="utf-8"?><FictionBook xmlns="http://www.gribuser.ru/xml/fictionbook/2.0"><description><title-info><book-title>Sample FB2</book-title><author><first-name>Test</first-name><last-name>Author</last-name></author></title-info></description><body><title><p>Sample FB2</p></title><p>Test content</p></body></FictionBook>'
+
+def _write_minimal_xps() -> bytes:
+    # XPS is essentially a zip with specific FixedDocument sequences.
+    # PyMuPDF can also open basic empty zip? No, it needs valid XPS.
+    # Actually, we can just use a dummy text file renamed to XPS if PyMuPDF falls back to text,
+    # but let's just make a very basic empty XPS structure.
+    import io
+    import zipfile
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w") as z:
+        z.writestr("[Content_Types].xml", '<?xml version="1.0" encoding="utf-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="fdoc" ContentType="application/vnd.ms-package.xps-fixeddocument+xml" /><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml" /></Types>')
+        z.writestr("_rels/.rels", '<?xml version="1.0" encoding="utf-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Type="http://schemas.microsoft.com/xps/2005/06/fixedrepresentation" Target="/FixedDocumentSequence.fdseq" Id="R1" /></Relationships>')
+        z.writestr("FixedDocumentSequence.fdseq", '<FixedDocumentSequence xmlns="http://schemas.microsoft.com/xps/2005/06"><DocumentReference Source="Documents/1/FixedDocument.fdoc" /></FixedDocumentSequence>')
+        z.writestr("Documents/1/FixedDocument.fdoc", '<FixedDocument xmlns="http://schemas.microsoft.com/xps/2005/06"><PageContent Source="Pages/1.fpage" /></FixedDocument>')
+        z.writestr("Documents/1/Pages/1.fpage", '<FixedPage Width="793.76" Height="1122.56" xmlns="http://schemas.microsoft.com/xps/2005/06" xml:lang="en-US"></FixedPage>')
+        z.writestr("Documents/1/_rels/FixedDocument.fdoc.rels", '<?xml version="1.0" encoding="utf-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Type="http://schemas.microsoft.com/xps/2005/06/required-resource" Target="/Documents/1/Pages/1.fpage" Id="R1" /></Relationships>')
+    return buf.getvalue()
+
 def build(dest: Path) -> list[Path]:
     """Наполнить ``dest`` всеми скриптуемыми образцами. Идемпотентно.
 
@@ -286,6 +342,7 @@ def build(dest: Path) -> list[Path]:
     jpeg = _JPEG_16
     record_json = _RECORD_JSON
     catalog_xml = _CATALOG_XML
+    pdf = _write_minimal_pdf()
 
     written = [
         _write(dest / "text/plain-en.txt", _PLAIN_EN),
@@ -300,6 +357,11 @@ def build(dest: Path) -> list[Path]:
         _write(dest / "data/settings.ini", _SETTINGS_INI),
         _write(dest / "images/swatch.png", png),
         _write(dest / "images/swatch.jpg", jpeg),
+        _write(dest / "books/sample.pdf", pdf),
+        _write(dest / "books/sample.cbz", _write_minimal_cbz()),
+        _write(dest / "books/sample.epub", _write_minimal_epub()),
+        _write(dest / "books/sample.fb2", _write_minimal_fb2()),
+        _write(dest / "books/sample.xps", _write_minimal_xps()),
         _write(dest / "large/big-lines.txt", _big_text_bytes()),
         _write(dest / "noext/hello-script", _SHEBANG_SCRIPT),
         # «Битые» образцы: обрезки валидных файлов — просмотрщик обязан отдать
@@ -308,6 +370,7 @@ def build(dest: Path) -> list[Path]:
         _write(dest / "broken/truncated.jpg", jpeg[: len(jpeg) // 3]),
         _write(dest / "broken/truncated.json", record_json[:60]),
         _write(dest / "broken/truncated.xml", catalog_xml[:80]),
+        _write(dest / "broken/truncated.pdf", pdf[: 10]),
     ]
     return sorted(written)
 
