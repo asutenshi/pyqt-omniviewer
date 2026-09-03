@@ -1,10 +1,12 @@
 from pathlib import Path
 
 import fitz  # type: ignore
-from PyQt6.QtCore import QObject, QRunnable, Qt, QThreadPool, pyqtSignal
+from PyQt6.QtCore import QEvent, QObject, QRunnable, Qt, QThreadPool, pyqtSignal
 from PyQt6.QtGui import QImage, QPixmap
 from PyQt6.QtWidgets import (
+    QHBoxLayout,
     QLabel,
+    QPushButton,
     QScrollArea,
     QSizePolicy,
     QVBoxLayout,
@@ -47,8 +49,6 @@ class RenderPageTask(QRunnable):
                 return
 
             # Convert fitz.Pixmap to QImage
-            # fitz provides samples, width, height, stride. 
-            # We must keep a copy of data because QImage doesn't own it.
             qimg = QImage(
                 pix.samples,
                 pix.width,
@@ -83,10 +83,34 @@ class PdfViewer(BaseViewer):
         # UI
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(4)
         
+        # Zoom toolbar
+        toolbar = QWidget()
+        tb_layout = QHBoxLayout(toolbar)
+        tb_layout.setContentsMargins(8, 4, 8, 4)
+        tb_layout.setSpacing(6)
+        
+        self.btn_zoom_out = QPushButton("Зум −")
+        self.btn_zoom_out.clicked.connect(self.zoom_out)
+        self.btn_zoom_reset = QPushButton("100%")
+        self.btn_zoom_reset.clicked.connect(self.zoom_reset)
+        self.btn_zoom_in = QPushButton("Зум +")
+        self.btn_zoom_in.clicked.connect(self.zoom_in)
+        self.lbl_zoom = QLabel("100%")
+        
+        tb_layout.addWidget(QLabel("Масштаб:"))
+        tb_layout.addWidget(self.btn_zoom_out)
+        tb_layout.addWidget(self.btn_zoom_reset)
+        tb_layout.addWidget(self.btn_zoom_in)
+        tb_layout.addWidget(self.lbl_zoom)
+        tb_layout.addStretch(1)
+        layout.addWidget(toolbar)
+
         self.scroll_area = QScrollArea(self)
         self.scroll_area.setWidgetResizable(True)
         self.scroll_area.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.scroll_area.viewport().installEventFilter(self)
         
         self.content_widget = QWidget()
         self.content_layout = QVBoxLayout(self.content_widget)
@@ -95,9 +119,22 @@ class PdfViewer(BaseViewer):
         self.content_layout.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignHCenter)
         
         self.scroll_area.setWidget(self.content_widget)
-        layout.addWidget(self.scroll_area)
+        layout.addWidget(self.scroll_area, stretch=1)
         
         self._page_labels: list[QLabel] = []
+
+    def eventFilter(self, obj, event):
+        if (
+            obj == self.scroll_area.viewport()
+            and event.type() == QEvent.Type.Wheel
+            and event.modifiers() == Qt.KeyboardModifier.ControlModifier
+        ):
+            if event.angleDelta().y() > 0:
+                self.zoom_in()
+            else:
+                self.zoom_out()
+            return True
+        return super().eventFilter(obj, event)
 
     @classmethod
     def can_handle(cls, path: Path, mime_type) -> bool:
@@ -147,6 +184,8 @@ class PdfViewer(BaseViewer):
                 
             self.content_layout.addWidget(lbl)
             self._page_labels.append(lbl)
+            
+        self.load_async()
 
     def load_async(self) -> None:
         """Запускает рендеринг страниц в фоне."""
@@ -179,16 +218,21 @@ class PdfViewer(BaseViewer):
                 widget.deleteLater()
 
     def zoom_in(self) -> None:
-        self._zoom *= 1.2
+        self._zoom = min(10.0, self._zoom * 1.2)
         self._rerender()
 
     def zoom_out(self) -> None:
-        self._zoom /= 1.2
+        self._zoom = max(0.1, self._zoom / 1.2)
+        self._rerender()
+
+    def zoom_reset(self) -> None:
+        self._zoom = 1.0
         self._rerender()
         
     def _rerender(self):
         if not self._path or not self.doc:
             return
+        self.lbl_zoom.setText(f"{int(self._zoom * 100)}%")
         self._cancel_all_tasks()
         # Resize labels to new expected sizes and clear pixmaps
         for i, lbl in enumerate(self._page_labels):
