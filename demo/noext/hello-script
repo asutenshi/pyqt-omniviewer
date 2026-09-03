@@ -1,0 +1,4 @@
+#!/bin/sh
+# Файл без расширения с распознаваемым содержимым (shebang -> shell script).
+echo "pyqt-omniviewer demo: extensionless shell script"
+exit 0

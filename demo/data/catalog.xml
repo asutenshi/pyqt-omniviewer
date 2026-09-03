@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<catalog name="demo" version="1">
+  <item id="1">
+    <title>first</title>
+    <tags>
+      <tag>text</tag>
+      <tag>xml</tag>
+    </tags>
+  </item>
+  <item id="2">
+    <title>second</title>
+    <tags>
+      <tag>sample</tag>
+    </tags>
+  </item>
+</catalog>

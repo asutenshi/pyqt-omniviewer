@@ -1,0 +1,9 @@
+pyqt-omniviewer demo sample: plain text
+=======================================
+
+This file is UTF-8 encoded plain text with a few short paragraphs. It exists so
+the registry smoke test has a trivial text/plain fixture to hand to the text
+viewer.
+
+Lines stay under eighty columns. No tabs, no trailing whitespace, single blank
+line between paragraphs.
