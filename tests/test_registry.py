@@ -8,6 +8,7 @@ from PyQt6.QtWidgets import QApplication
 
 from omniviewer.registry import ViewerRegistry
 from omniviewer.viewers.fallback import FallbackViewer
+from omniviewer.viewers.image import ImageViewer
 from omniviewer.viewers.text import TextViewer
 
 DEMO_DIR = Path(__file__).parent.parent / "demo"
@@ -26,12 +27,21 @@ FILE_TO_VIEWER = {
     "data/config.yaml": TextViewer,
     "data/catalog.xml": TextViewer,
     "data/settings.ini": TextViewer,
-    "images/swatch.png": FallbackViewer,
-    "images/swatch.jpg": FallbackViewer,
+    "images/swatch.png": ImageViewer,
+    "images/swatch.jpg": ImageViewer,
+    "images/swatch.gif": ImageViewer,
+    "images/animated.gif": ImageViewer,
+    "images/photo_exif.jpg": ImageViewer,
+    "images/swatch.bmp": ImageViewer,
+    "images/swatch.webp": ImageViewer,
+    "images/swatch.tiff": ImageViewer,
+    "images/swatch.ico": ImageViewer,
+    "images/circle.svg": ImageViewer,
     "large/big-lines.txt": TextViewer,
     "noext/hello-script": TextViewer,
-    "broken/truncated.png": FallbackViewer,
-    "broken/truncated.jpg": FallbackViewer,
+    "broken/truncated.png": ImageViewer,
+    "broken/truncated.jpg": ImageViewer,
+    "broken/truncated.svg": ImageViewer,
     "broken/truncated.json": TextViewer,
     "broken/truncated.xml": TextViewer,
 }
@@ -51,10 +61,19 @@ PATH_TO_MIME = {
     "data/settings.ini": "application/octet-stream", # По умолчанию
     "images/swatch.png": "image/png",
     "images/swatch.jpg": "image/jpeg",
+    "images/swatch.gif": "image/gif",
+    "images/animated.gif": "image/gif",
+    "images/photo_exif.jpg": "image/jpeg",
+    "images/swatch.bmp": "image/bmp",
+    "images/swatch.webp": "image/webp",
+    "images/swatch.tiff": "image/tiff",
+    "images/swatch.ico": "image/vnd.microsoft.icon",
+    "images/circle.svg": "image/svg+xml",
     "large/big-lines.txt": "text/plain",
     "noext/hello-script": "application/octet-stream", # Без расширения пока octet-stream
     "broken/truncated.png": "image/png",
     "broken/truncated.jpg": "image/jpeg",
+    "broken/truncated.svg": "image/svg+xml",
     "broken/truncated.json": "application/json",
     "broken/truncated.xml": "text/xml",
 }
