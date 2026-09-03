@@ -4,6 +4,7 @@ from PyQt6.QtCore import QMimeDatabase
 
 from omniviewer.viewers.base import BaseViewer
 from omniviewer.viewers.fallback import FallbackViewer
+from omniviewer.viewers.text import TextViewer
 
 
 ## @brief Реестр просмотрщиков файлов.
@@ -16,6 +17,7 @@ class ViewerRegistry:
         self._mime_db = QMimeDatabase()
         # Регистрируем FallbackViewer по умолчанию
         self.register(FallbackViewer)
+        self.register(TextViewer)
 
     def register(self, viewer_cls: type[BaseViewer]) -> None:
         """Регистрирует класс просмотрщика в реестре."""
