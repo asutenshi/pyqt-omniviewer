@@ -9,6 +9,7 @@ from PyQt6.QtWidgets import QApplication
 from omniviewer.registry import ViewerRegistry
 from omniviewer.viewers.fallback import FallbackViewer
 from omniviewer.viewers.image import ImageViewer
+from omniviewer.viewers.pdf import PdfViewer
 from omniviewer.viewers.text import TextViewer
 
 DEMO_DIR = Path(__file__).parent.parent / "demo"
@@ -37,6 +38,11 @@ FILE_TO_VIEWER = {
     "images/swatch.tiff": ImageViewer,
     "images/swatch.ico": ImageViewer,
     "images/circle.svg": ImageViewer,
+    "books/sample.pdf": PdfViewer,
+    "books/sample.cbz": PdfViewer,
+    "books/sample.epub": PdfViewer,
+    "books/sample.fb2": PdfViewer,
+    "books/sample.xps": PdfViewer,
     "large/big-lines.txt": TextViewer,
     "noext/hello-script": TextViewer,
     "broken/truncated.png": ImageViewer,
@@ -44,6 +50,7 @@ FILE_TO_VIEWER = {
     "broken/truncated.svg": ImageViewer,
     "broken/truncated.json": TextViewer,
     "broken/truncated.xml": TextViewer,
+    "broken/truncated.pdf": PdfViewer,
 }
 
 # Таблица: имя файла из demo/ -> Ожидаемый MIME-тип.
@@ -69,6 +76,11 @@ PATH_TO_MIME = {
     "images/swatch.tiff": "image/tiff",
     "images/swatch.ico": "image/vnd.microsoft.icon",
     "images/circle.svg": "image/svg+xml",
+    "books/sample.pdf": "application/pdf",
+    "books/sample.cbz": "application/vnd.comicbook+zip", # or application/zip
+    "books/sample.epub": "application/epub+zip",
+    "books/sample.fb2": "application/x-fictionbook+xml",
+    "books/sample.xps": "application/vnd.ms-xpsdocument", # or application/oxps
     "large/big-lines.txt": "text/plain",
     "noext/hello-script": "application/octet-stream", # Без расширения пока octet-stream
     "broken/truncated.png": "image/png",
@@ -76,6 +88,7 @@ PATH_TO_MIME = {
     "broken/truncated.svg": "image/svg+xml",
     "broken/truncated.json": "application/json",
     "broken/truncated.xml": "text/xml",
+    "broken/truncated.pdf": "application/pdf",
 }
 
 @pytest.fixture(scope="session", autouse=True)

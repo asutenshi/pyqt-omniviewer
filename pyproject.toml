@@ -8,7 +8,8 @@ version = "0.1.0"
 description = "Two-panel desktop file viewer"
 requires-python = ">=3.10"
 dependencies = [
-    "PyQt6>=6.6"
+    "PyQt6>=6.6",
+    "PyMuPDF>=1.23.0"
 ]
 
 [project.scripts]
