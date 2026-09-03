@@ -10,6 +10,7 @@ from omniviewer.registry import ViewerRegistry
 from omniviewer.viewers.fallback import FallbackViewer
 from omniviewer.viewers.image import ImageViewer
 from omniviewer.viewers.pdf import PdfViewer
+from omniviewer.viewers.spreadsheet import SpreadsheetViewer
 from omniviewer.viewers.text import TextViewer
 
 DEMO_DIR = Path(__file__).parent.parent / "demo"
@@ -22,8 +23,11 @@ FILE_TO_VIEWER = {
     "text/notes-ru.txt": TextViewer,
     "code/example.py": TextViewer,
     "code/example.c": TextViewer,
-    "data/table.csv": TextViewer,
-    "data/table.tsv": TextViewer,
+    "data/table.csv": SpreadsheetViewer,
+    "data/table.tsv": SpreadsheetViewer,
+    "data/table.xlsx": SpreadsheetViewer,
+    "data/table.xls": SpreadsheetViewer,
+    "data/table.ods": SpreadsheetViewer,
     "data/record.json": TextViewer,
     "data/config.yaml": TextViewer,
     "data/catalog.xml": TextViewer,
@@ -51,6 +55,7 @@ FILE_TO_VIEWER = {
     "broken/truncated.json": TextViewer,
     "broken/truncated.xml": TextViewer,
     "broken/truncated.pdf": PdfViewer,
+    "broken/truncated.xlsx": SpreadsheetViewer,
 }
 
 # Таблица: имя файла из demo/ -> Ожидаемый MIME-тип.
@@ -62,6 +67,9 @@ PATH_TO_MIME = {
     "code/example.c": "text/x-csrc", # Или text/plain, mimetypes может выдать None
     "data/table.csv": "text/csv",
     "data/table.tsv": "text/tab-separated-values",
+    "data/table.xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "data/table.xls": "application/vnd.ms-excel",
+    "data/table.ods": "application/vnd.oasis.opendocument.spreadsheet",
     "data/record.json": "application/json",
     "data/config.yaml": "application/x-yaml", # Или application/yaml
     "data/catalog.xml": "text/xml", # Или application/xml
@@ -89,6 +97,7 @@ PATH_TO_MIME = {
     "broken/truncated.json": "application/json",
     "broken/truncated.xml": "text/xml",
     "broken/truncated.pdf": "application/pdf",
+    "broken/truncated.xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 }
 
 @pytest.fixture(scope="session", autouse=True)
