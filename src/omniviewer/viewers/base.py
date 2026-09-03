@@ -2,7 +2,9 @@
 import traceback
 from collections.abc import Callable
 
-from PyQt6.QtCore import QObject, QRunnable, QThreadPool, pyqtSignal
+from pathlib import Path
+
+from PyQt6.QtCore import QMimeType, QObject, QRunnable, QThreadPool, pyqtSignal
 from PyQt6.QtWidgets import QLabel, QTextBrowser, QVBoxLayout, QWidget
 
 
@@ -50,13 +52,26 @@ class BaseViewer(QWidget):
     priority: int = 0
 
     @classmethod
-    def can_handle(cls, path: str, mime: str) -> bool:
-        """Определяет, может ли просмотрщик открыть данный файл."""
-        from pathlib import Path
-        ext = Path(path).suffix.lower()
-        if mime and mime in cls.mime_types:
+    def can_handle(cls, path: Path, mime: QMimeType | str) -> bool:
+        """
+        Проверяет, может ли просмотрщик обработать файл с заданным путем и MIME-типом.
+        Учитывает наследование MIME-типов и расширения файлов.
+        """
+        mime_name = mime.name() if isinstance(mime, QMimeType) else str(mime)
+
+        # 1. Точное совпадение MIME или поддержка всех типов
+        if "*/*" in cls.mime_types or mime_name in cls.mime_types:
             return True
-        return bool(ext and ext in cls.extensions)
+
+        # 2. Проверка наследования MIME (если передан QMimeType)
+        if isinstance(mime, QMimeType):
+            for t in cls.mime_types:
+                if mime.inherits(t):
+                    return True
+
+        # 3. Запасной матч по расширению
+        suffix = path.suffix.lower()
+        return bool(suffix and suffix in cls.extensions)
 
     def __init__(self):
         super().__init__()
@@ -66,14 +81,14 @@ class BaseViewer(QWidget):
         self._active_workers: set[Worker] = set()
         self._layout = QVBoxLayout(self)
 
-    def safe_load(self, path: str):
+    def safe_load(self, path: Path):
         """Безопасная обертка для load, перехватывающая исключения."""
         try:
             self.load(path)
         except Exception as e:
             self._show_error(e, traceback.format_exc())
 
-    def load(self, path: str):
+    def load(self, path: Path):
         """Синхронная загрузка, переопределяемая в наследниках."""
 
     def safe_load_async(self):

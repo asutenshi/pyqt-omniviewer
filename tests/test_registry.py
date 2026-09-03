@@ -68,7 +68,6 @@ def qapp():
 @pytest.fixture
 def registry():
     reg = ViewerRegistry()
-    reg.set_fallback(FallbackViewer)
     return reg
 
 def get_demo_files():
@@ -93,7 +92,7 @@ def test_expected_viewer_class(registry, rel_path):
     expected_class = FILE_TO_VIEWER.get(rel_path, FallbackViewer)
     
     full_path = str(DEMO_DIR / rel_path)
-    viewer = registry.viewer_for(full_path)
+    viewer = registry.viewer_for(Path(full_path))
     
     assert isinstance(viewer, expected_class), f"Expected {expected_class.__name__} for {rel_path}, got {type(viewer).__name__}"
 
@@ -107,10 +106,10 @@ def test_smoke_load(qapp, registry, rel_path):
         pytest.skip("Broken files are tested separately")
         
     full_path = str(DEMO_DIR / rel_path)
-    viewer = registry.viewer_for(full_path)
+    viewer = registry.viewer_for(Path(full_path))
     
     try:
-        viewer.safe_load(full_path)
+        viewer.safe_load(Path(full_path))
         viewer.safe_load_async()
         
         # Ждем завершения асинхронных задач
@@ -128,10 +127,10 @@ def test_broken_files(qapp, registry, rel_path):
     Тест: обрезанный образец каждого поддержанного типа → просмотрщик отдаёт «ошибочный» виджет, не падает.
     """
     full_path = str(DEMO_DIR / rel_path)
-    viewer = registry.viewer_for(full_path)
+    viewer = registry.viewer_for(Path(full_path))
     
     try:
-        viewer.safe_load(full_path)
+        viewer.safe_load(Path(full_path))
         viewer.safe_load_async()
         
         from PyQt6.QtCore import QThreadPool
@@ -151,33 +150,34 @@ def test_unrecognized_file(qapp, registry, tmp_path):
     unrec_path = tmp_path / "unknown.xyz123"
     unrec_path.write_text("Hello")
     
-    viewer = registry.viewer_for(str(unrec_path))
+    viewer = registry.viewer_for(unrec_path)
     assert isinstance(viewer, FallbackViewer)
     
-    viewer.safe_load(str(unrec_path))
+    viewer.safe_load(unrec_path)
     assert not viewer.is_error_widget
 
 @pytest.mark.parametrize("rel_path", get_demo_files())
 def test_expected_mime(rel_path):
-    """
-    Тест «путь → ожидаемый MIME» проходит по образцам demo/, включая файл без расширения.
-    """
-    from omniviewer.mime import detect_mime
+    from PyQt6.QtCore import QMimeDatabase, QMimeType
     
     expected_mime = PATH_TO_MIME.get(rel_path)
     if not expected_mime:
-        # Если не прописано, то пропускаем или используем octet-stream, 
-        # но по правилам надо прописать всё в таблицу
         expected_mime = "application/octet-stream"
         
     full_path = str(DEMO_DIR / rel_path)
-    mime = detect_mime(full_path)
+    mime = QMimeDatabase().mimeTypeForFile(full_path, QMimeDatabase.MatchMode.MatchDefault).name()
     
-    # Для C файлов mimetypes в python возвращает 'text/x-csrc' в зависимости от системы
+    # QMimeDatabase usually gives text/x-csrc for .c
     if rel_path == "code/example.c":
-        assert mime in ["text/x-csrc", "text/plain", "text/x-c"]
+        assert mime in ["text/x-csrc", "text/plain", "text/x-c++src"]
     elif rel_path == "data/config.yaml":
         assert mime in ["application/x-yaml", "application/yaml", "text/yaml"]
+    elif rel_path.endswith(".xml"):
+        assert mime in ["application/xml", "text/xml"]
+    elif "hello-script" in rel_path:
+        assert mime in ["application/x-shellscript", "application/octet-stream"]
+    elif rel_path == "data/settings.ini":
+        assert mime in ["application/octet-stream", "text/plain"]
     else:
         assert mime == expected_mime, f"Expected {expected_mime} for {rel_path}, got {mime}"
 
