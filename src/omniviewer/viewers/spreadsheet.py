@@ -77,7 +77,7 @@ class SpreadsheetViewer(BaseViewer):
 
     def __init__(self):
         super().__init__()
-        self._layout = QVBoxLayout(self)
+        # Исключаем создание нового QVBoxLayout, так как он уже создан в BaseViewer (self._layout)
         self._layout.setContentsMargins(0, 0, 0, 0)
         
         self._sheet_selector = QComboBox()
