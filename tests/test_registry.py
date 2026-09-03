@@ -9,6 +9,7 @@ from PyQt6.QtWidgets import QApplication
 from omniviewer.registry import ViewerRegistry
 from omniviewer.viewers.fallback import FallbackViewer
 from omniviewer.viewers.image import ImageViewer
+from omniviewer.viewers.media import MediaViewer
 from omniviewer.viewers.pdf import PdfViewer
 from omniviewer.viewers.spreadsheet import SpreadsheetViewer
 from omniviewer.viewers.text import TextViewer
@@ -49,6 +50,11 @@ FILE_TO_VIEWER = {
     "books/sample.xps": PdfViewer,
     "large/big-lines.txt": TextViewer,
     "noext/hello-script": TextViewer,
+    "media/sample.mp4": MediaViewer,
+    "media/sample.mkv": MediaViewer,
+    "media/sample.mp3": MediaViewer,
+    "media/sample.wav": MediaViewer,
+    "media/sample.m4a": MediaViewer,
     "broken/truncated.png": ImageViewer,
     "broken/truncated.jpg": ImageViewer,
     "broken/truncated.svg": ImageViewer,
@@ -56,6 +62,8 @@ FILE_TO_VIEWER = {
     "broken/truncated.xml": TextViewer,
     "broken/truncated.pdf": PdfViewer,
     "broken/truncated.xlsx": SpreadsheetViewer,
+    "broken/truncated.mp4": MediaViewer,
+    "broken/truncated.mp3": MediaViewer,
 }
 
 # Таблица: имя файла из demo/ -> Ожидаемый MIME-тип.
@@ -91,6 +99,11 @@ PATH_TO_MIME = {
     "books/sample.xps": "application/vnd.ms-xpsdocument", # or application/oxps
     "large/big-lines.txt": "text/plain",
     "noext/hello-script": "application/octet-stream", # Без расширения пока octet-stream
+    "media/sample.mp4": "video/mp4",
+    "media/sample.mkv": "video/x-matroska",
+    "media/sample.mp3": "audio/mpeg",
+    "media/sample.wav": "audio/vnd.wave",
+    "media/sample.m4a": "audio/mp4",
     "broken/truncated.png": "image/png",
     "broken/truncated.jpg": "image/jpeg",
     "broken/truncated.svg": "image/svg+xml",
@@ -98,6 +111,8 @@ PATH_TO_MIME = {
     "broken/truncated.xml": "text/xml",
     "broken/truncated.pdf": "application/pdf",
     "broken/truncated.xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "broken/truncated.mp4": "video/mp4",
+    "broken/truncated.mp3": "audio/mpeg",
 }
 
 @pytest.fixture(scope="session", autouse=True)
@@ -218,6 +233,10 @@ def test_expected_mime(rel_path):
         assert mime in ["application/xml", "text/xml"]
     elif "hello-script" in rel_path:
         assert mime in ["application/x-shellscript", "application/octet-stream"]
+    elif rel_path == "media/sample.wav":
+        assert mime in ["audio/vnd.wave", "audio/x-wav"]
+    elif rel_path == "media/sample.m4a":
+        assert mime in ["audio/mp4", "audio/x-m4a"]
     elif rel_path == "data/settings.ini":
         assert mime in ["application/octet-stream", "text/plain"]
     else:
