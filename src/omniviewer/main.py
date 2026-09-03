@@ -43,7 +43,10 @@ class MainWindow(QMainWindow):
         # Tree panel
         self.tree_panel = QWidget()
         tree_layout = QVBoxLayout(self.tree_panel)
-        tree_layout.addWidget(QLabel("Tree Area"))
+        
+        from omniviewer.tree import FileTreePanel
+        self.tree_widget = FileTreePanel(initial_path)
+        tree_layout.addWidget(self.tree_widget)
         
         # Swap button
         self.swap_button = QPushButton("Swap Panels")
