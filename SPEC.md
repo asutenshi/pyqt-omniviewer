@@ -104,7 +104,7 @@
 
 40. Как пользователь, я хочу видеть PNG/JPEG/GIF/BMP/WebP/TIFF/ICO, вписанные в окно, с зумом и панорамированием.
 41. Как пользователь, я хочу, чтобы анимированные GIF/APNG проигрывались, чтобы видеть анимацию.
-42. Как пользователь, я хочу открывать SVG (простой — через QtSvg, сложный — через движок рендеринга), чтобы видеть векторную графику.
+42. Как пользователь, я хочу открывать SVG через QtSvg, чтобы видеть векторную графику (сложный SVG с CSS-фильтрами/скриптами может отобразиться упрощённо).
 43. Как пользователь, я хочу открывать HEIC/HEIF и AVIF, чтобы просматривать фото с телефонов и современные форматы.
 44. Как пользователь, я хочу открывать RAW-фото (CR2/CR3/NEF/ARW/DNG и пр.) через встроенный превью-JPEG, чтобы быстро увидеть кадр.
 45. Как пользователь, я хочу видеть EXIF изображения в панели свойств, чтобы знать параметры съёмки.
@@ -128,7 +128,7 @@
 54. Как пользователь, я хочу открывать шрифты (ttf/otf/woff) с образцом набора символов, чтобы оценить начертание.
 55. Как пользователь, я хочу открывать `.eml`/`.msg` как читаемое письмо (заголовки + тело), чтобы прочитать переписку.
 56. Как пользователь, я хочу для любого экзотического бинарного формата видеть разобранное дерево полей (hachoir) и метаданные, чтобы получить максимум информации.
-57. Как пользователь, я хочу, чтобы HTML/MHTML отображались отрендеренными, чтобы читать сохранённые страницы.
+57. Как пользователь, я хочу, чтобы HTML/MHTML отображались отрендеренными (базовый HTML/CSS движком Qt), чтобы читать сохранённые страницы как текст с форматированием.
 
 ### Миниатюры (после MVP)
 
@@ -149,7 +149,13 @@
 ### Технологический стек
 
 - **Python** — целевая 3.12 (Ubuntu 24.04), `requires-python = ">=3.10"`.
-- **GUI** — **PyQt6**. Плюс `PyQt6-WebEngine` для HTML/MHTML/сложный SVG/EPUB(альт.)/ipynb.
+- **GUI** — **PyQt6** (только ядро Qt). `PyQt6-WebEngine` **не используется**: он
+  многопроцессный (запускает вспомогательный бинарник `QtWebEngineProcess` на
+  движке Chromium), что противоречит требованию «всё in-process, без сторонних
+  процессов». HTML/MHTML/Markdown/DOCX/ipynb рендерятся через `QTextBrowser`
+  (встроенный в Qt движок rich text: HTML4 / CSS2.1), SVG — через `QtSvg`.
+  Плата: нет пиксельной точности для сложных веб-страниц, CSS3, JS и SVG с
+  фильтрами — для задачи «показать содержимое» приемлемо.
 - **Лицензия проекта — AGPL-3.0** (вынужденно: PyMuPDF распространяется под AGPL).
 - Никаких вызовов внешних процессов/приложений в коде продукта. Допускаются только
   библиотеки, работающие in-process (в т.ч. нативные: libmupdf, libarchive,
@@ -212,12 +218,12 @@
 | Обработчик | Форматы | Библиотеки |
 |---|---|---|
 | Text/Code | txt, любой исходный код, json/yaml/xml/toml/ini, log | `pygments` + `QSyntaxHighlighter` на read-only `QPlainTextEdit`; кодировка — `charset-normalizer` |
-| Markdown | md, markdown | `markdown-it-py` (+ `pygments`); `QTextBrowser`, для сложного — WebEngine |
+| Markdown | md, markdown | `markdown-it-py` (+ `pygments`) → HTML → `QTextBrowser` (или `QTextDocument.setMarkdown`) |
 | Hex/Fallback | всё нераспознанное | окно-читалка (первые N КБ) + hex-виджет + панель метаданных |
 | Image | png, jpg, gif, bmp, webp, tiff, ico | `QImageReader`, `QMovie` для анимации |
 | Image+ | heic/heif, avif | `pillow-heif`, `pillow-avif-plugin` (через `Pillow` → `QImage`) |
 | RAW | cr2, cr3, nef, arw, dng, raf, orf, rw2 | `rawpy` — извлечение встроенного превью-JPEG |
-| SVG | svg (простой) | `QtSvg`; сложный — WebEngine |
+| SVG | svg, svgz | `QtSvg` (`QSvgWidget`); сложный SVG с CSS3-фильтрами/JS — упрощённо |
 | PDF/Book | pdf, epub, mobi, fb2, cbz, xps | **PyMuPDF** (`fitz`) — рендер страниц в `QImage` |
 | DOCX | docx | `mammoth` → HTML (`QTextBrowser`), метаданные через `python-docx` |
 | DOC | doc | `olefile` — извлечённый текст |
@@ -227,8 +233,8 @@
 | Spreadsheet (legacy) | xls | `xlrd` |
 | CSV | csv, tsv | stdlib `csv` (+ `pandas` опционально) → `QTableView`, сниффинг разделителя |
 | Presentation | pptx, ppt | `python-pptx` — текст слайдов + извлечённые изображения |
-| Notebook | ipynb | `nbconvert` → HTML → WebEngine |
-| Web | html, htm, mhtml, xhtml | WebEngine |
+| Notebook | ipynb | `nbconvert` (шаблон `basic`) → HTML → `QTextBrowser` |
+| Web | html, htm, xhtml, mhtml | `QTextBrowser` (HTML4/CSS2.1); `.mhtml` распаковывается stdlib `email` |
 | Media | mp4, mkv, avi, webm, mov, mp3, flac, wav, ogg, m4a, opus | **QtMultimedia** (`QMediaPlayer` + `QVideoWidget`); опциональный fallback — `python-mpv` (libmpv); аудиотеги/обложка — `mutagen` |
 | Archive | zip, tar, tar.gz/bz2/xz, 7z, rar, iso, cab, lha, ar | stdlib `zipfile`/`tarfile` + `py7zr` + `libarchive-c`; дерево содержимого; распаковка одного файла во временную папку → рекурсивный показ тем же реестром |
 | Font | ttf, otf, woff, woff2 | `fonttools` (метаданные) + `QRawFont`/`QFontDatabase.addApplicationFont` (образец) |
@@ -339,6 +345,11 @@
 - Пиксельно-точный рендер офисных документов (doc/docx/odt/ppt/xls) — из-за
   запрета на внешние приложения показываем текст + структуру + вложенные
   изображения.
+- Точный рендер современных веб-страниц (CSS3, flexbox/grid, JavaScript) и
+  сложного SVG (фильтры, анимация, скрипты) — `PyQt6-WebEngine` намеренно не
+  используется (многопроцессный движок Chromium противоречит требованию
+  «без сторонних процессов»). HTML/MHTML отображаются через `QTextBrowser`
+  (HTML4/CSS2.1).
 - Форматы, требующие внешних конвертеров без in-process библиотеки:
   DWG (проприетарный), полноценный STEP/IGES-рендер — только если найдётся
   библиотека и останется время (фичефлаг «3D/CAD»).
