@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "omniviewer"
+version = "0.1.0"
+description = "Two-panel desktop file viewer"
+requires-python = ">=3.10"
+dependencies = [
+    "PyQt6>=6.6"
+]
+
+[project.scripts]
+omniviewer = "omniviewer.main:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
