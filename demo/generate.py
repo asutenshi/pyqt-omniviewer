@@ -308,19 +308,60 @@ def _swatch_png() -> bytes:
 
 _PDF_BYTES = None
 def _write_minimal_pdf() -> bytes:
+    """Двухстраничный PDF через PyMuPDF; на окружении без него — ручной stdlib-PDF.
+
+    ``import fitz`` обёрнут: генератор обязан работать «на голом» окружении
+    (критерий приёмки issue #3), а PyMuPDF — необязательная зависимость.
+    """
     global _PDF_BYTES
     if _PDF_BYTES is not None:
         return _PDF_BYTES
-    import fitz  # type: ignore
-    doc = fitz.open()
-    page = doc.new_page(width=400, height=400)
-    page.insert_text((50, 50), "pyqt-omniviewer PDF sample", fontsize=14)
-    page = doc.new_page(width=400, height=400)
-    page.insert_text((50, 50), "Page 2", fontsize=14)
-    res = doc.write()
-    doc.close()
-    _PDF_BYTES = res
-    return res
+
+    try:
+        import fitz  # type: ignore
+
+        doc = fitz.open()
+        page = doc.new_page(width=400, height=400)
+        page.insert_text((50, 50), "pyqt-omniviewer PDF sample", fontsize=14)
+        page = doc.new_page(width=400, height=400)
+        page.insert_text((50, 50), "Page 2", fontsize=14)
+        _PDF_BYTES = doc.write()
+        doc.close()
+        return _PDF_BYTES
+    except ImportError:
+        pass
+
+    stream = b"BT /F1 18 Tf 20 110 Td (pyqt-omniviewer PDF sample) Tj ET\n"
+    page_obj = (
+        b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 300 200] "
+        b"/Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>"
+    )
+    objects = [
+        b"<< /Type /Catalog /Pages 2 0 R >>",
+        b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+        page_obj,
+        b"<< /Length %d >>\nstream\n" % len(stream) + stream + b"endstream",
+        b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+    ]
+
+    out = bytearray(b"%PDF-1.4\n%\xe2\xe3\xcf\xd3\n")
+    offsets = []
+    for i, body in enumerate(objects, start=1):
+        offsets.append(len(out))
+        out += f"{i} 0 obj\n".encode("ascii") + body + b"\nendobj\n"
+
+    xref_pos = len(out)
+    out += f"xref\n0 {len(objects) + 1}\n".encode("ascii")
+    out += b"0000000000 65535 f \n"
+    for off in offsets:
+        out += f"{off:010d} 00000 n \n".encode("ascii")
+    out += (
+        f"trailer\n<< /Size {len(objects) + 1} /Root 1 0 R >>\n"
+        f"startxref\n{xref_pos}\n%%EOF\n"
+    ).encode("ascii")
+
+    _PDF_BYTES = bytes(out)
+    return _PDF_BYTES
 
 def _write_minimal_cbz() -> bytes:
     import io
@@ -362,6 +403,85 @@ def _write_minimal_xps() -> bytes:
         z.writestr("Documents/1/_rels/FixedDocument.fdoc.rels", '<?xml version="1.0" encoding="utf-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Type="http://schemas.microsoft.com/xps/2005/06/required-resource" Target="/Documents/1/Pages/1.fpage" Id="R1" /></Relationships>')
     return buf.getvalue()
 
+def _zip_bytes() -> bytes:
+    """ZIP с несколькими файлами и подкаталогом (детерминированные метки времени)."""
+    import io
+    import zipfile
+
+    buf = io.BytesIO()
+    items = {
+        "README.txt": b"pyqt-omniviewer archive sample\n",
+        "src/main.py": b"print('hello from archive')\n",
+        "src/data/table.csv": b"id,name\n1,Alice\n2,Bob\n",
+    }
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
+        for name, data in items.items():
+            info = zipfile.ZipInfo(name, date_time=(2020, 1, 1, 0, 0, 0))
+            zf.writestr(info, data)
+    return buf.getvalue()
+
+
+def _tar_gz_bytes() -> bytes:
+    """tar.gz с двумя файлами; mtime зафиксирован ради идемпотентности."""
+    import io
+    import tarfile
+
+    raw = io.BytesIO()
+    with tarfile.open(fileobj=raw, mode="w") as tf:
+        for name, data in (
+            ("notes.txt", b"tar.gz sample\n"),
+            ("dir/inner.txt", b"nested entry\n"),
+        ):
+            info = tarfile.TarInfo(name)
+            info.size = len(data)
+            info.mtime = 1577836800  # 2020-01-01Z
+            tf.addfile(info, io.BytesIO(data))
+    gz = io.BytesIO()
+    import gzip
+
+    with gzip.GzipFile(fileobj=gz, mode="wb", mtime=0) as gf:
+        gf.write(raw.getvalue())
+    return gz.getvalue()
+
+
+def _ar_bytes() -> bytes:
+    """Классический Unix ``ar`` — простейший формат, пишется вручную (для libarchive)."""
+    members = (
+        ("hello.txt", b"ar archive sample\n"),
+        ("second.txt", b"second member\n"),
+    )
+    out = bytearray(b"!<arch>\n")
+    for name, data in members:
+        header = (
+            f"{name:<16}{0:<12}{0:<6}{0:<6}{'100644':<8}{len(data):<10}".encode("ascii")
+            + b"\x60\x0a"
+        )
+        out += header + data
+        if len(data) % 2:
+            out += b"\n"
+    return bytes(out)
+
+
+def _nested_zip_bytes() -> bytes:
+    """ZIP, внутри которого лежит ещё один ZIP с текстовым файлом (тест рекурсии)."""
+    import io
+    import zipfile
+
+    inner = io.BytesIO()
+    with zipfile.ZipFile(inner, "w") as zf:
+        zf.writestr(
+            zipfile.ZipInfo("payload.txt", date_time=(2020, 1, 1, 0, 0, 0)),
+            b"deepest payload inside a nested archive\n",
+        )
+    outer = io.BytesIO()
+    with zipfile.ZipFile(outer, "w") as zf:
+        zf.writestr(
+            zipfile.ZipInfo("inner.zip", date_time=(2020, 1, 1, 0, 0, 0)),
+            inner.getvalue(),
+        )
+    return outer.getvalue()
+
+
 def build(dest: Path) -> list[Path]:
     """Наполнить ``dest`` всеми скриптуемыми образцами. Идемпотентно.
 
@@ -374,6 +494,7 @@ def build(dest: Path) -> list[Path]:
     catalog_xml = _CATALOG_XML
     pdf = _write_minimal_pdf()
     mp4 = _MP4
+    sample_zip = _zip_bytes()
 
     written = [
         _write(dest / "text/plain-en.txt", _PLAIN_EN),
@@ -416,6 +537,11 @@ def build(dest: Path) -> list[Path]:
         _write(dest / "media/sample.ogg", _OGG),
         _write(dest / "media/sample.m4a", _M4A),
         _write(dest / "media/sample.opus", _OPUS),
+        # Архивы (только stdlib: zipfile / tarfile / ручной ar).
+        _write(dest / "archives/sample.zip", sample_zip),
+        _write(dest / "archives/sample.tar.gz", _tar_gz_bytes()),
+        _write(dest / "archives/sample.ar", _ar_bytes()),
+        _write(dest / "archives/nested.zip", _nested_zip_bytes()),
         # «Битые» образцы: обрезки валидных файлов — просмотрщик обязан отдать
         # аккуратный «ошибочный» виджет, а не упасть.
         _write(dest / "broken/truncated.png", png[: len(png) // 2]),
@@ -427,6 +553,7 @@ def build(dest: Path) -> list[Path]:
         _write(dest / "broken/truncated.mp3", _MP3[:10]),
         _write(dest / "broken/truncated.xlsx", _XLSX[:10]),
         _write(dest / "broken/truncated.heic", _HEIC_SAMPLE[: len(_HEIC_SAMPLE) // 3]),
+        _write(dest / "broken/truncated.zip", sample_zip[:24]),
     ]
     return sorted(written)
 

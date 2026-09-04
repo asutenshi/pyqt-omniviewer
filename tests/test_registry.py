@@ -7,6 +7,7 @@ import pytest
 from PyQt6.QtWidgets import QApplication
 
 from omniviewer.registry import ViewerRegistry
+from omniviewer.viewers.archive import ArchiveViewer
 from omniviewer.viewers.fallback import FallbackViewer
 from omniviewer.viewers.image import ImageViewer
 from omniviewer.viewers.media import MediaViewer
@@ -53,6 +54,10 @@ FILE_TO_VIEWER = {
     "books/sample.epub": PdfViewer,
     "books/sample.fb2": PdfViewer,
     "books/sample.xps": PdfViewer,
+    "archives/sample.zip": ArchiveViewer,
+    "archives/sample.tar.gz": ArchiveViewer,
+    "archives/sample.ar": ArchiveViewer,
+    "archives/nested.zip": ArchiveViewer,
     "large/big-lines.txt": TextViewer,
     "noext/hello-script": TextViewer,
     "media/sample.mp4": MediaViewer,
@@ -75,6 +80,7 @@ FILE_TO_VIEWER = {
     "broken/truncated.xlsx": SpreadsheetViewer,
     "broken/truncated.mp4": MediaViewer,
     "broken/truncated.mp3": MediaViewer,
+    "broken/truncated.zip": ArchiveViewer,
 }
 
 # Таблица: имя файла из demo/ -> Ожидаемый MIME-тип.
@@ -113,6 +119,10 @@ PATH_TO_MIME = {
     "books/sample.epub": "application/epub+zip",
     "books/sample.fb2": "application/x-fictionbook+xml",
     "books/sample.xps": "application/vnd.ms-xpsdocument", # or application/oxps
+    "archives/sample.zip": "application/zip",
+    "archives/sample.tar.gz": "application/gzip",
+    "archives/sample.ar": "application/x-archive",
+    "archives/nested.zip": "application/zip",
     "large/big-lines.txt": "text/plain",
     "noext/hello-script": "application/octet-stream", # Без расширения пока octet-stream
     "media/sample.mp4": "video/mp4",
@@ -135,6 +145,7 @@ PATH_TO_MIME = {
     "broken/truncated.xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     "broken/truncated.mp4": "video/mp4",
     "broken/truncated.mp3": "audio/mpeg",
+    "broken/truncated.zip": "application/zip",
 }
 
 @pytest.fixture(scope="session", autouse=True)
@@ -275,6 +286,10 @@ def test_expected_mime(rel_path):
         assert mime in [
             "image/x-raw-adobe", "image/x-adobe-dng", "image/dng", "image/tiff", "image/x-dcraw",
         ]
+    elif rel_path == "archives/sample.tar.gz":
+        assert mime in ["application/gzip", "application/x-gzip", "application/x-compressed-tar"]
+    elif rel_path == "archives/sample.ar":
+        assert mime in ["application/x-archive", "application/x-unix-archive"]
     else:
         assert mime == expected_mime, f"Expected {expected_mime} for {rel_path}, got {mime}"
 

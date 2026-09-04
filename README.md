@@ -37,6 +37,7 @@ https://github.com/user-attachments/assets/325a28d6-c7b4-4216-9489-264fbeeb61fc
 | Изображения | PNG, JPEG, GIF, BMP, WebP, TIFF (многостраничный — листание кадров), ICO, SVG, HEIC/HEIF, AVIF, RAW (CR2/CR3/NEF/ARW/DNG/RAF/ORF/RW2 — по встроенному превью-JPEG) |
 | Аудио | MP3, FLAC, WAV, OGG, M4A, Opus |
 | Видео | MP4, MKV, AVI, WebM, MOV |
+| Архивы | ZIP, TAR(.gz/.bz2/.xz), 7Z, RAR, ISO, CAB, LHA, AR — дерево содержимого; двойной клик открывает вложенный файл тем же приложением; вложенные архивы — рекурсивно (с лимитами глубины и суммарного размера, защита от Zip Slip) |
 | Любой другой файл | fallback: текст → hex-дамп + базовые метаданные (размер, MIME, даты) |
 
 ### В планах
@@ -47,7 +48,6 @@ https://github.com/user-attachments/assets/325a28d6-c7b4-4216-9489-264fbeeb61fc
 | Офисные документы | DOCX, DOC, ODT, RTF, PPTX, PPT, ODP (структура + текст + вложенные изображения) |
 | Ноутбуки | ipynb (отрендеренный) |
 | Аудио | теги и обложка в панели свойств |
-| Архивы | ZIP, TAR(.gz/.bz2/.xz), 7Z, RAR, ISO, CAB, LHA — дерево содержимого и вложенные файлы |
 | Шрифты | TTF, OTF, WOFF, WOFF2 (образец начертания) |
 | Почта | EML, MSG |
 | Прочее | дерево полей произвольного бинарного формата (hachoir) |
