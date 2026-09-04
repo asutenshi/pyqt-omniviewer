@@ -21,7 +21,7 @@ from pathlib import Path
 import nbformat
 import pytest
 from PyQt6.QtCore import QUrl
-from PyQt6.QtGui import QTextDocument
+from PyQt6.QtGui import QColor, QPalette, QTextDocument
 from PyQt6.QtWidgets import QApplication
 
 from omniviewer.registry import ViewerRegistry
@@ -43,6 +43,19 @@ def qapp():
 @pytest.fixture
 def registry() -> ViewerRegistry:
     return ViewerRegistry()
+
+
+@pytest.fixture
+def dark_qt_theme(qapp):
+    """Форсировать тёмную палитру Qt на время теста (тёмный QPalette.Base)."""
+    old = qapp.palette()
+    dark = QPalette(old)
+    dark.setColor(QPalette.ColorRole.Base, QColor("#1e1e1e"))
+    dark.setColor(QPalette.ColorRole.Text, QColor("#e0e0e0"))
+    dark.setColor(QPalette.ColorRole.Window, QColor("#2b2b2b"))
+    qapp.setPalette(dark)
+    yield
+    qapp.setPalette(old)
 
 
 # --------------------------------------------------------------------------- #
@@ -147,6 +160,33 @@ def test_code_cell_is_highlighted(tmp_path: Path) -> None:
     idx = html.find("import")
     assert idx != -1
     assert "color:#" in html[idx - 220 : idx]
+
+
+def test_dark_theme_code_cell_has_dark_bg_and_readable_text(tmp_path: Path, dark_qt_theme) -> None:
+    """На тёмной теме блок кода ноутбука: тёмный фон + светлый цвет текста, при
+    этом stderr/error-вывод остаётся визуально отличимым от обычного кода."""
+    viewer = IpynbViewer()
+    viewer.safe_load(_write_ipynb(tmp_path / "nb.ipynb", _notebook(with_image=False)))
+
+    assert not viewer.is_error_widget
+    html = viewer.rendered_html
+    assert ".highlight, .highlight pre { background:#1e1e1e; color:#d4d4d4; }" in html
+    # плейн-токены/неизвестный язык наследуют цвет .highlight — он светлый
+    idx = html.find("import")
+    assert idx != -1
+    # stderr-вывод отличается фоном от обычного блока кода
+    assert "background:#3a1f1f" in html
+
+
+def test_light_theme_code_cell_keeps_previous_look(tmp_path: Path) -> None:
+    """На светлой (дефолтной offscreen) палитре — прежнее поведение."""
+    viewer = IpynbViewer()
+    viewer.safe_load(_write_ipynb(tmp_path / "nb.ipynb", _notebook(with_image=False)))
+
+    assert not viewer.is_error_widget
+    html = viewer.rendered_html
+    assert "background:#f5f5f5" in html
+    assert "background:#ffe6e6" in html
 
 
 # --------------------------------------------------------------------------- #
