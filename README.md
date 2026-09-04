@@ -41,7 +41,9 @@ Python + PyQt6. Всё рендерится программно, **без за�
 
 Актуальный список пополняется по мере разработки — см. [SPEC.md](SPEC.md).
 
-## Установка (чистая Ubuntu 24.04)
+## Установка
+
+Эталон — чистая Ubuntu 24.04; также поддержана Fedora/RHEL.
 
 ```bash
 git clone https://github.com/asutenshi/pyqt-omniviewer.git
@@ -49,9 +51,9 @@ cd pyqt-omniviewer
 bash install.sh
 ```
 
-`install.sh` ставит системные пакеты (`apt`) и Python-зависимости в `.venv`.
-Список pip-пакетов — [requirements.txt](requirements.txt); системные пакеты
-перечислены внутри `install.sh`.
+`install.sh` сам выбирает пакетный менеджер (`apt` или `dnf`), ставит системные
+пакеты и Python-зависимости в `.venv`. Список pip-пакетов —
+[requirements.txt](requirements.txt); системные пакеты перечислены внутри `install.sh`.
 
 ## Запуск
 
@@ -65,7 +67,7 @@ omniviewer [путь-к-папке-или-файлу]
 ## Документация (Doxygen)
 
 ```bash
-sudo apt-get install -y doxygen
+sudo apt-get install -y doxygen   # Fedora: sudo dnf install -y doxygen
 doxygen Doxyfile
 xdg-open docs/html/index.html
 ```

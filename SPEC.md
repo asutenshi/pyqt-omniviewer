@@ -246,13 +246,20 @@
 - Изображения: если сторона > порога (по умолчанию ~8000 px) — уменьшение при загрузке.
 - Пороги настраиваются в `QSettings`.
 
-### Системные зависимости (apt, чистая Ubuntu 24.04)
+### Системные зависимости
 
-- Qt Multimedia FFmpeg-бэкенд: `libqt6multimedia6`, `qt6-multimedia-ffmpeg` (либо
-  набор `gstreamer1.0-plugins-*` + `gstreamer1.0-libav`).
+Эталон — чистая Ubuntu 24.04 (`apt`); `install.sh` также поддерживает Fedora/RHEL
+(`dnf`). Имена ниже — для `apt`, аналоги для `dnf` см. в `install.sh`.
+
+- Qt Multimedia FFmpeg-бэкенд: приходит вместе с колесом `PyQt6` из pip
+  (`libffmpegmediaplugin.so` + встроенные `libav*`/`libsw*`), отдельный системный
+  пакет не нужен. Из системы требуются лишь общие GUI/аудио-библиотеки
+  (`libgl1`, `libegl1`, `libpulse0`, `libasound2t64`, `libfontconfig1`,
+  `libfreetype6`, `libxrandr2`, `libxkbcommon0`, `libxkbcommon-x11-0`,
+  `libxcb-cursor0`).
 - `qt6-image-formats-plugins` — дополнительные форматы изображений для Qt.
 - `libarchive13` — для `libarchive-c`.
-- Опционально: `libmpv2` — для запасного движка `python-mpv`.
+- Опционально: `libmpv2` — для запасного движка `python-mpv` (на Fedora — из RPM Fusion).
 - Doxygen: пакет `doxygen` (только для сборки документации, не для рантайма).
 - Полный список — в `README` и `install.sh`.
 
