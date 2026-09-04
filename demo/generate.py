@@ -3,9 +3,9 @@
 
 Наполняет каталог ``demo/`` файлами, которые можно воспроизвести из кода:
 тексты, исходники, ``csv``/``tsv``, ``json``/``yaml``/``xml``/``ini``, простые
-растровые изображения, большой текстовый файл для проверки оконного чтения,
-презентации (pptx/odp/ppt), набор «битых» (обрезанных) образцов и файл без расширения с распознаваемым
-содержимым.
+растровые изображения, презентации (pptx/odp/ppt), Jupyter-ноутбук, большой
+текстовый файл для проверки оконного чтения, набор «битых» (обрезанных)
+образцов и файл без расширения с распознаваемым содержимым.
 
 Запуск идемпотентен: повторный вызов не меняет уже созданные файлы. Каждый
 последующий тикет-просмотрщик добавляет сюда свою ветку генерации и/или
@@ -847,6 +847,85 @@ def _write_minimal_doc() -> bytes:
     return bytes(header) + bytes(dir_sect) + bytes(fat) + bytes(data_sectors)
 
 
+def _ipynb_bytes() -> bytes:
+    """Jupyter-ноутбук (nbformat 4.5) — обычный JSON, собирается stdlib.
+
+    Ячейка Markdown, ячейка кода с текстовым выводом (stream + execute_result) и
+    ячейка кода с выводом-картинкой (`image/png`, тот же swatch, base64). Все
+    `id` фиксированы — генерация детерминирована.
+    """
+    import json
+
+    png_b64 = base64.b64encode(_swatch_png()).decode("ascii")
+    nb = {
+        "nbformat": 4,
+        "nbformat_minor": 5,
+        "metadata": {
+            "kernelspec": {"name": "python3", "language": "python", "display_name": "Python 3"},
+            "language_info": {"name": "python", "version": "3.12"},
+        },
+        "cells": [
+            {
+                "cell_type": "markdown",
+                "id": "cell-md-1",
+                "metadata": {},
+                "source": [
+                    "# Демонстрационный ноутбук\n",
+                    "\n",
+                    "Ячейка **Markdown**: заголовок, список, `инлайн-код`.\n",
+                    "\n",
+                    "- считаем площадь круга\n",
+                    "- выводим текст и картинку\n",
+                ],
+            },
+            {
+                "cell_type": "code",
+                "id": "cell-code-1",
+                "metadata": {},
+                "execution_count": 1,
+                "source": [
+                    "import math\n",
+                    "\n",
+                    "\n",
+                    "def area(r):\n",
+                    "    return math.pi * r * r\n",
+                    "\n",
+                    "\n",
+                    "print(round(area(2), 3))\n",
+                    "area(2)\n",
+                ],
+                "outputs": [
+                    {"output_type": "stream", "name": "stdout", "text": ["12.566\n"]},
+                    {
+                        "output_type": "execute_result",
+                        "execution_count": 1,
+                        "metadata": {},
+                        "data": {"text/plain": ["12.566370614359172"]},
+                    },
+                ],
+            },
+            {
+                "cell_type": "code",
+                "id": "cell-code-2",
+                "metadata": {},
+                "execution_count": 2,
+                "source": ["# вывод-картинка (PNG, вложён в ноутбук)\n", "render_swatch()\n"],
+                "outputs": [
+                    {
+                        "output_type": "display_data",
+                        "metadata": {},
+                        "data": {
+                            "image/png": png_b64,
+                            "text/plain": ["<Figure size 32x32>"],
+                        },
+                    }
+                ],
+            },
+        ],
+    }
+    return (json.dumps(nb, ensure_ascii=False, indent=1) + "\n").encode("utf-8")
+
+
 def build(dest: Path) -> list[Path]:
     """Наполнить ``dest`` всеми скриптуемыми образцами. Идемпотентно.
 
@@ -921,6 +1000,8 @@ def build(dest: Path) -> list[Path]:
         _write(dest / "documents/sample.doc", _write_minimal_doc()),
         _write(dest / "documents/sample.odt", _ODT_SAMPLE),
         _write(dest / "documents/sample.rtf", _RTF_SAMPLE),
+        # Jupyter-ноутбук: обычный JSON, рендерится nbconvert (шаблон basic).
+        _write(dest / "notebooks/sample.ipynb", _ipynb_bytes()),
         # «Битые» образцы: обрезки валидных файлов — просмотрщик обязан отдать
         # аккуратный «ошибочный» виджет, а не упасть.
         _write(dest / "broken/truncated.png", png[: len(png) // 2]),
@@ -939,6 +1020,7 @@ def build(dest: Path) -> list[Path]:
         _write(dest / "broken/truncated.doc", _write_minimal_doc()[:50]),
         _write(dest / "broken/truncated.odt", _ODT_SAMPLE[:50]),
         _write(dest / "broken/truncated.rtf", _RTF_SAMPLE[:17]),
+        _write(dest / "broken/truncated.ipynb", _ipynb_bytes()[: len(_ipynb_bytes()) // 3]),
     ]
     return sorted(written)
 

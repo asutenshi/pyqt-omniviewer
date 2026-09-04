@@ -11,6 +11,7 @@ from omniviewer.viewers.archive import ArchiveViewer
 from omniviewer.viewers.document import DocumentViewer
 from omniviewer.viewers.fallback import FallbackViewer
 from omniviewer.viewers.image import ImageViewer
+from omniviewer.viewers.ipynb import IpynbViewer
 from omniviewer.viewers.markup import MarkupViewer
 from omniviewer.viewers.media import MediaViewer
 from omniviewer.viewers.pdf import PdfViewer
@@ -83,6 +84,8 @@ FILE_TO_VIEWER = {
     "presentations/sample.odp": PresentationViewer,
     "presentations/sample.ppt": PresentationViewer,
     "broken/truncated.pptx": PresentationViewer,
+    "notebooks/sample.ipynb": IpynbViewer,
+    "broken/truncated.ipynb": IpynbViewer,
     "broken/truncated.png": ImageViewer,
     "broken/truncated.jpg": ImageViewer,
     "broken/truncated.svg": ImageViewer,
@@ -170,6 +173,8 @@ PATH_TO_MIME = {
     "broken/truncated.pptx": (
         "application/vnd.openxmlformats-officedocument.presentationml.presentation"
     ),
+    "notebooks/sample.ipynb": "text/plain",
+    "broken/truncated.ipynb": "text/plain",
     "broken/truncated.png": "image/png",
     "broken/truncated.jpg": "image/jpeg",
     "broken/truncated.svg": "image/svg+xml",
@@ -373,5 +378,7 @@ def test_expected_mime(rel_path):
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
             "application/zip", "application/octet-stream",
         ]
+    elif rel_path.endswith(".ipynb"):
+        assert mime in ["text/plain", "application/json", "application/x-ipynb+json"]
     else:
         assert mime == expected_mime, f"Expected {expected_mime} for {rel_path}, got {mime}"
