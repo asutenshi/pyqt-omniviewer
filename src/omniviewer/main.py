@@ -137,8 +137,13 @@ class MainWindow(QMainWindow):
         self.status_bar = QStatusBar()
         self.setStatusBar(self.status_bar)
         self.status_bar.showMessage(f"Opened: {initial_path}")
-        
+
         self.current_path = initial_path
+
+        # Меню "Справка" -> "О программе"
+        help_menu = self.menuBar().addMenu("Справка")
+        self.about_action = help_menu.addAction("О программе")
+        self.about_action.triggered.connect(self._show_about_dialog)
 
     ## @brief Обработчик выбора файла в дереве.
     #
@@ -185,6 +190,14 @@ class MainWindow(QMainWindow):
         else:
             self.splitter.insertWidget(1, self.tree_panel)
             
+    ## @brief Открывает диалог «О программе» со списком поддерживаемых форматов.
+    def _show_about_dialog(self):
+        """Показывает модальный AboutDialog поверх главного окна."""
+        from omniviewer.about_dialog import AboutDialog
+
+        dialog = AboutDialog(self)
+        dialog.exec()
+
     def closeEvent(self, event):
         """Сохранение настроек при закрытии."""
         self.settings.window_geometry = self.saveGeometry()

@@ -47,6 +47,7 @@ _HEADER_LABELS = (
 )
 
 
+## @brief Одно вложение письма: имя файла и его содержимое.
 @dataclass(frozen=True)
 class MailAttachment:
     """Одно вложение письма: имя файла и его содержимое."""

@@ -3,6 +3,7 @@ from pathlib import Path
 from PyQt6.QtCore import QByteArray, QSettings
 
 
+## @brief Настройки приложения (геометрия окна, последняя папка, сортировка, лимиты) поверх QSettings.
 class AppSettings:
     """Управление настройками приложения через QSettings."""
     def __init__(self):

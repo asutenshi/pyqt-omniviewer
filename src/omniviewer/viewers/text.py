@@ -13,6 +13,7 @@ from PyQt6.QtWidgets import QHBoxLayout, QLabel, QPlainTextEdit, QPushButton, QW
 from omniviewer.viewers.base import BaseViewer
 
 
+## @brief Мост между лексером pygments и QSyntaxHighlighter для подсветки синтаксиса кода.
 class PygmentsHighlighter(QSyntaxHighlighter):
     """Highlighter bridging pygments with QSyntaxHighlighter."""
     def __init__(self, document: QTextDocument, lexer):

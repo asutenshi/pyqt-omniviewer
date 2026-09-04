@@ -7,11 +7,13 @@ from PyQt6.QtCore import QMimeType, QObject, QRunnable, QThreadPool, pyqtSignal
 from PyQt6.QtWidgets import QLabel, QTextBrowser, QVBoxLayout, QWidget
 
 
+## @brief Qt-сигналы фонового воркера: успех (finished) и ошибка (error) с traceback.
 class WorkerSignals(QObject):
     """Signals for the background worker."""
     finished = pyqtSignal(object)
     error = pyqtSignal(Exception, str)
 
+## @brief Выполняет тяжёлую задачу просмотрщика в QThreadPool, не блокируя GUI-поток.
 class Worker(QRunnable):
     """Worker for executing heavy render tasks in a QThreadPool."""
     def __init__(self, fn: Callable, *args, **kwargs):
