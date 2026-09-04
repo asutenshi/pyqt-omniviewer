@@ -10,6 +10,7 @@ from omniviewer.registry import ViewerRegistry
 from omniviewer.viewers.archive import ArchiveViewer
 from omniviewer.viewers.document import DocumentViewer
 from omniviewer.viewers.fallback import FallbackViewer
+from omniviewer.viewers.font import FontViewer
 from omniviewer.viewers.image import ImageViewer
 from omniviewer.viewers.ipynb import IpynbViewer
 from omniviewer.viewers.markup import MarkupViewer
@@ -86,6 +87,11 @@ FILE_TO_VIEWER = {
     "broken/truncated.pptx": PresentationViewer,
     "notebooks/sample.ipynb": IpynbViewer,
     "broken/truncated.ipynb": IpynbViewer,
+    "fonts/sample.ttf": FontViewer,
+    "fonts/sample.otf": FontViewer,
+    "fonts/sample.woff": FontViewer,
+    "fonts/sample.woff2": FontViewer,
+    "broken/truncated.ttf": FontViewer,
     "broken/truncated.png": ImageViewer,
     "broken/truncated.jpg": ImageViewer,
     "broken/truncated.svg": ImageViewer,
@@ -175,6 +181,11 @@ PATH_TO_MIME = {
     ),
     "notebooks/sample.ipynb": "text/plain",
     "broken/truncated.ipynb": "text/plain",
+    "fonts/sample.ttf": "application/x-font-ttf",
+    "fonts/sample.otf": "application/x-font-otf",
+    "fonts/sample.woff": "application/octet-stream",
+    "fonts/sample.woff2": "application/octet-stream",
+    "broken/truncated.ttf": "application/x-font-ttf",
     "broken/truncated.png": "image/png",
     "broken/truncated.jpg": "image/jpeg",
     "broken/truncated.svg": "image/svg+xml",
@@ -380,5 +391,16 @@ def test_expected_mime(rel_path):
         ]
     elif rel_path.endswith(".ipynb"):
         assert mime in ["text/plain", "application/json", "application/x-ipynb+json"]
+    elif rel_path.endswith((".ttf", ".otf")):
+        assert mime in [
+            "application/x-font-ttf", "application/x-font-otf", "font/ttf", "font/otf",
+            "font/sfnt", "application/font-sfnt", "application/x-font-truetype",
+            "application/x-font-opentype", "application/vnd.ms-opentype", "application/octet-stream",
+        ]
+    elif rel_path.endswith((".woff", ".woff2")):
+        assert mime in [
+            "application/octet-stream", "font/woff", "font/woff2",
+            "application/font-woff", "application/font-woff2",
+        ]
     else:
         assert mime == expected_mime, f"Expected {expected_mime} for {rel_path}, got {mime}"
