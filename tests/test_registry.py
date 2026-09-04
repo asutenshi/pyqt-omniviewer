@@ -43,6 +43,11 @@ FILE_TO_VIEWER = {
     "images/swatch.tiff": ImageViewer,
     "images/swatch.ico": ImageViewer,
     "images/circle.svg": ImageViewer,
+    "images/sample.heic": ImageViewer,
+    "images/sample.avif": ImageViewer,
+    "images/multipage.tiff": ImageViewer,
+    "images/sample.dng": ImageViewer,
+    "broken/truncated.heic": ImageViewer,
     "books/sample.pdf": PdfViewer,
     "books/sample.cbz": PdfViewer,
     "books/sample.epub": PdfViewer,
@@ -98,6 +103,11 @@ PATH_TO_MIME = {
     "images/swatch.tiff": "image/tiff",
     "images/swatch.ico": "image/vnd.microsoft.icon",
     "images/circle.svg": "image/svg+xml",
+    "images/sample.heic": "image/heic",
+    "images/sample.avif": "image/avif",
+    "images/multipage.tiff": "image/tiff",
+    "images/sample.dng": "image/x-raw-adobe",
+    "broken/truncated.heic": "image/heic",
     "books/sample.pdf": "application/pdf",
     "books/sample.cbz": "application/vnd.comicbook+zip", # or application/zip
     "books/sample.epub": "application/epub+zip",
@@ -257,6 +267,14 @@ def test_expected_mime(rel_path):
         assert mime in ["audio/x-opus+ogg", "audio/ogg", "audio/opus"]
     elif rel_path == "data/settings.ini":
         assert mime in ["application/octet-stream", "text/plain"]
+    elif rel_path.endswith(".heic"):
+        assert mime in ["image/heic", "image/heif", "image/heic-sequence"]
+    elif rel_path == "images/sample.avif":
+        assert mime in ["image/avif", "image/heif"]
+    elif rel_path == "images/sample.dng":
+        assert mime in [
+            "image/x-raw-adobe", "image/x-adobe-dng", "image/dng", "image/tiff", "image/x-dcraw",
+        ]
     else:
         assert mime == expected_mime, f"Expected {expected_mime} for {rel_path}, got {mime}"
 

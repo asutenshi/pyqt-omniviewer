@@ -66,7 +66,21 @@ def _get_hachoir_metadata(path: str, meta: dict):
     except Exception:  # noqa: BLE001, S110
         pass
 
+def _register_optional_image_plugins():
+    """HEIC/HEIF и AVIF читаются Pillow только после регистрации плагинов."""
+    try:
+        import pillow_heif
+        pillow_heif.register_heif_opener()
+    except Exception:  # noqa: BLE001, S110
+        pass
+    try:
+        import pillow_avif  # noqa: F401
+    except Exception:  # noqa: BLE001, S110
+        pass
+
+
 def _get_image_metadata(path: str, meta: dict):
+    _register_optional_image_plugins()
     try:
         from PIL import Image
         from PIL.ExifTags import TAGS
@@ -81,6 +95,16 @@ def _get_image_metadata(path: str, meta: dict):
                         meta[tag] = str(data)
     except Exception:  # noqa: BLE001, S110
         pass
+
+def _get_raw_metadata(path: str, meta: dict):
+    """RAW-фото: размер кадра через rawpy, EXIF-подобные поля — через hachoir."""
+    try:
+        import rawpy
+        with rawpy.imread(path) as raw:
+            meta["Resolution"] = f"{raw.sizes.width}x{raw.sizes.height}"
+    except Exception:  # noqa: BLE001, S110
+        pass
+    _get_hachoir_metadata(path, meta)
 
 def _get_audio_metadata(path: str, meta: dict):
     try:
@@ -126,8 +150,17 @@ def metadata_for(path: str) -> dict:
         return {}
         
     mime = meta.get("MIME Type", "")
-    
-    if mime.startswith("image/"):
+    lower = path.lower()
+
+    _IMG_EXT = (
+        ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp", ".tif", ".tiff", ".ico",
+        ".heic", ".heif", ".hif", ".avif",
+    )
+    _RAW_EXT = (".cr2", ".cr3", ".nef", ".arw", ".dng", ".raf", ".orf", ".rw2")
+
+    if lower.endswith(_RAW_EXT):
+        _get_raw_metadata(path, meta)
+    elif mime.startswith("image/") or lower.endswith(_IMG_EXT):
         _get_image_metadata(path, meta)
     elif mime.startswith(("audio/", "video/")):
         _get_audio_metadata(path, meta)
