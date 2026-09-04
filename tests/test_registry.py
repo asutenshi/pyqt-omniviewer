@@ -13,6 +13,7 @@ from omniviewer.viewers.image import ImageViewer
 from omniviewer.viewers.markup import MarkupViewer
 from omniviewer.viewers.media import MediaViewer
 from omniviewer.viewers.pdf import PdfViewer
+from omniviewer.viewers.presentation import PresentationViewer
 from omniviewer.viewers.spreadsheet import SpreadsheetViewer
 from omniviewer.viewers.text import TextViewer
 
@@ -77,6 +78,10 @@ FILE_TO_VIEWER = {
     "markup/page.xhtml": MarkupViewer,
     "markup/saved.mhtml": MarkupViewer,
     "broken/truncated.mhtml": MarkupViewer,
+    "presentations/sample.pptx": PresentationViewer,
+    "presentations/sample.odp": PresentationViewer,
+    "presentations/sample.ppt": PresentationViewer,
+    "broken/truncated.pptx": PresentationViewer,
     "broken/truncated.png": ImageViewer,
     "broken/truncated.jpg": ImageViewer,
     "broken/truncated.svg": ImageViewer,
@@ -147,6 +152,14 @@ PATH_TO_MIME = {
     "markup/page.xhtml": "application/xhtml+xml",
     "markup/saved.mhtml": "multipart/related",
     "broken/truncated.mhtml": "multipart/related",
+    "presentations/sample.pptx": (
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+    ),
+    "presentations/sample.odp": "application/vnd.oasis.opendocument.presentation",
+    "presentations/sample.ppt": "application/vnd.ms-powerpoint",
+    "broken/truncated.pptx": (
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+    ),
     "broken/truncated.png": "image/png",
     "broken/truncated.jpg": "image/jpeg",
     "broken/truncated.svg": "image/svg+xml",
@@ -305,6 +318,18 @@ def test_expected_mime(rel_path):
         assert mime in ["text/markdown", "text/x-markdown", "text/plain"]
     elif rel_path.endswith(".mhtml"):
         assert mime in ["multipart/related", "application/x-mimearchive", "message/rfc822"]
+    elif rel_path.endswith(".pptx"):
+        assert mime in [
+            "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+            "application/zip",
+            "application/octet-stream",
+        ]
+    elif rel_path == "presentations/sample.ppt":
+        assert mime in [
+            "application/vnd.ms-powerpoint",
+            "application/x-ole-storage",
+            "application/octet-stream",
+        ]
     else:
         assert mime == expected_mime, f"Expected {expected_mime} for {rel_path}, got {mime}"
 

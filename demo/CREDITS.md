@@ -7,7 +7,8 @@
 
 Создаются `demo/generate.py` из кода (тексты, исходники, `csv`/`tsv`,
 `json`/`yaml`/`xml`/`ini`, архивы `zip`/`tar.gz`/`ar`/вложенный `zip`, разметка
-`md`/`html`/`xhtml`/`mhtml` с инлайновой картинкой, большой текстовый файл,
+`md`/`html`/`xhtml`/`mhtml` с инлайновой картинкой, презентация `ppt`
+(двоичный OLE/CFBF собран вручную из stdlib `struct`), большой текстовый файл,
 «битые» обрезки, файл без расширения). Автор — этот репозиторий, лицензия
 **CC0 1.0**. Воспроизводятся командой
 `python demo/generate.py` и не требуют отдельной атрибуции.
@@ -26,6 +27,9 @@
 | `archives/sample.tar.gz` | TAR+GZIP | `demo/generate.py` (stdlib `tarfile`/`gzip`) | CC0 1.0 |
 | `archives/sample.ar` | Unix `ar` | `demo/generate.py` (собран вручную, stdlib) | CC0 1.0 |
 | `archives/nested.zip` | ZIP в ZIP | `demo/generate.py` (stdlib `zipfile`) | CC0 1.0 |
+| `presentations/sample.pptx` | PPTX, 3 слайда (на 2-м картинка) | сгенерирован однократно через `python-pptx`, вложён в `generate.py` как base64 | CC0 1.0 |
+| `presentations/sample.odp` | ODP, 3 слайда | сгенерирован однократно через `odfpy`, вложён в `generate.py` как base64 | CC0 1.0 |
+| `presentations/sample.ppt` | PPT (двоичный OLE) | `demo/generate.py` — OLE/CFBF с потоком «PowerPoint Document» собран вручную (stdlib `struct`) | CC0 1.0 |
 | `media/sample.{mp4,mkv,avi,webm,mov}` | короткие видео (~1 с) | синтетический тест-сигнал FFmpeg, сгенерированы однократно, вложены в `generate.py` как base64 | CC0 1.0 |
 | `media/sample.{mp3,flac,wav,ogg,m4a,opus}` | короткое аудио (~1 с) | синтетический тон FFmpeg, сгенерированы однократно, вложены в `generate.py` как base64 | CC0 1.0 |
 
