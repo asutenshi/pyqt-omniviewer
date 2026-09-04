@@ -143,6 +143,78 @@ def _get_pdf_metadata(path: str, meta: dict):
     except Exception:  # noqa: BLE001, S110
         pass
 
+def _get_docx_metadata(path: str, meta: dict):
+    """Извлечь метаданные DOCX через python-docx."""
+    try:
+        from docx import Document
+        doc = Document(path)
+        props = doc.core_properties
+        if props.author:
+            meta["Author"] = props.author
+        if props.title:
+            meta["Title"] = props.title
+        if props.subject:
+            meta["Subject"] = props.subject
+        if props.keywords:
+            meta["Keywords"] = props.keywords
+    except Exception:  # noqa: BLE001, S110
+        pass
+
+def _get_doc_metadata(path: str, meta: dict):
+    """Извлечь метаданные legacy .doc через olefile."""
+    try:
+        import olefile
+        with olefile.OleFileIO(path) as ole:
+            ole_meta = ole.get_metadata()
+            if ole_meta.author:
+                meta["Author"] = str(ole_meta.author)
+            if ole_meta.title:
+                meta["Title"] = str(ole_meta.title)
+            if ole_meta.subject:
+                meta["Subject"] = str(ole_meta.subject)
+    except Exception:  # noqa: BLE001, S110
+        pass
+
+def _get_odt_metadata(path: str, meta: dict):
+    """Извлечь метаданные ODT через odfpy."""
+    try:
+        from odf.opendocument import load as odf_load
+        doc = odf_load(path)
+        if doc.meta:
+            for elem in doc.meta.childNodes:
+                tag = (
+                    elem.qname[1]
+                    if hasattr(elem, "qname") and isinstance(elem.qname, tuple)
+                    else ""
+                )
+                val = "".join(
+                    str(c) for c in elem.childNodes if hasattr(c, "data") or str(c)
+                ).strip()
+                if tag in ("initial-creator", "creator") and val and "Author" not in meta:
+                    meta["Author"] = val
+                elif tag == "title" and val:
+                    meta["Title"] = val
+                elif tag == "subject" and val:
+                    meta["Subject"] = val
+    except Exception:  # noqa: BLE001, S110
+        pass
+
+def _get_rtf_metadata(path: str, meta: dict):
+    """Извлечь метаданные RTF (заголовок, автор) по тегам \\info."""
+    try:
+        import re
+        with open(path, "rb") as f:
+            raw = f.read(4096)
+        text = raw.decode("utf-8", errors="replace")
+        m_title = re.search(r"{\\title\s+([^}]+)}", text)
+        if m_title:
+            meta["Title"] = m_title.group(1).strip()
+        m_author = re.search(r"{\\author\s+([^}]+)}", text)
+        if m_author:
+            meta["Author"] = m_author.group(1).strip()
+    except Exception:  # noqa: BLE001, S110
+        pass
+
 def metadata_for(path: str) -> dict:
     """Единая точка входа для сбора метаданных файла."""
     meta = _get_basic_metadata(path)
@@ -181,5 +253,15 @@ def metadata_for(path: str) -> dict:
     if (mime.startswith(("audio/", "video/"))) and "Duration" not in meta:
         _get_hachoir_metadata(path, meta)
         
+    # Офисные документы
+    if mime == "application/vnd.openxmlformats-officedocument.wordprocessingml.document" or lower.endswith(".docx"):
+        _get_docx_metadata(path, meta)
+    elif mime in ("application/msword", "application/x-ole-storage") or lower.endswith(".doc"):
+        _get_doc_metadata(path, meta)
+    elif mime == "application/vnd.oasis.opendocument.text" or lower.endswith(".odt"):
+        _get_odt_metadata(path, meta)
+    elif mime in ("application/rtf", "text/rtf") or lower.endswith(".rtf"):
+        _get_rtf_metadata(path, meta)
+
     return meta
     # ruff: noqa: DTZ006, SIM102

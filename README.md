@@ -36,6 +36,7 @@ https://github.com/user-attachments/assets/325a28d6-c7b4-4216-9489-264fbeeb61fc
 | Презентации | PPTX (текст слайдов по порядку + вложенные изображения, python-pptx), ODP (текст слайдов, odfpy), legacy PPT (извлечённый текст) — слайды секциями в QTextBrowser, строго офлайн |
 | Документы и книги | PDF, EPUB, MOBI, FB2, CBZ, XPS/OXPS (постранично, PyMuPDF) |
 | Таблицы | XLSX, XLSM, XLS, ODS, CSV, TSV |
+| Офисные документы | DOCX (mammoth → HTML, заголовки/списки/изображения), DOC (olefile — извлечённый текст), ODT (odfpy — структура), RTF (striprtf — текст) |
 | Изображения | PNG, JPEG, GIF, BMP, WebP, TIFF (многостраничный — листание кадров), ICO, SVG, HEIC/HEIF, AVIF, RAW (CR2/CR3/NEF/ARW/DNG/RAF/ORF/RW2 — по встроенному превью-JPEG) |
 | Аудио | MP3, FLAC, WAV, OGG, M4A, Opus |
 | Видео | MP4, MKV, AVI, WebM, MOV |
@@ -46,7 +47,7 @@ https://github.com/user-attachments/assets/325a28d6-c7b4-4216-9489-264fbeeb61fc
 
 | Группа | Форматы |
 |---|---|
-| Офисные документы | DOCX, DOC, ODT, RTF (структура + текст + вложенные изображения) |
+
 | Ноутбуки | ipynb (отрендеренный) |
 | Аудио | теги и обложка в панели свойств |
 | Шрифты | TTF, OTF, WOFF, WOFF2 (образец начертания) |

@@ -646,6 +646,207 @@ def _mhtml_bytes() -> bytes:
     return root.as_bytes()
 
 
+_RTF_SAMPLE = r"""{\rtf1\ansi\deff0
+{\info{\title Демонстрационный RTF}{\author Omniviewer Demo}}
+{\fonttbl{\f0 Times New Roman;}}
+\pard\b Заголовок RTF-документа\b0\par
+\pard Это демонстрационный RTF-документ для pyqt-omniviewer.\par
+\pard\bullet  Первый пункт\par
+\pard\bullet  Второй пункт\par
+\pard\bullet  Третий пункт\par
+}"""
+
+_ODT_SAMPLE = base64.b64decode(
+    "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"
+    "AgAQAAGwUAAAAA"
+)
+
+
+def _write_minimal_docx() -> bytes:
+    """DOCX с базовой структурой, заголовками, списками, метаданными и встроенным изображением."""
+    import io
+    import zipfile
+
+    png_bytes = base64.b64decode(
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+    )
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
+        z.writestr(
+            "[Content_Types].xml",
+            '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'
+            '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">\n'
+            '  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>\n'
+            '  <Default Extension="xml" ContentType="application/xml"/>\n'
+            '  <Default Extension="png" ContentType="image/png"/>\n'
+            '  <Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>\n'
+            '  <Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/>\n'
+            '</Types>',
+        )
+        z.writestr(
+            "_rels/.rels",
+            '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'
+            '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">\n'
+            '  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>\n'
+            '  <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/>\n'
+            '</Relationships>',
+        )
+        z.writestr(
+            "word/_rels/document.xml.rels",
+            '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'
+            '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">\n'
+            '  <Relationship Id="rIdImg1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/image1.png"/>\n'
+            '</Relationships>',
+        )
+        z.writestr("word/media/image1.png", png_bytes)
+        z.writestr(
+            "word/document.xml",
+            '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'
+            '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"\n'
+            '            xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"\n'
+            '            xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"\n'
+            '            xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing">\n'
+            '  <w:body>\n'
+            '    <w:p><w:pPr><w:pStyle w:val="Heading1"/></w:pPr><w:r><w:t>Заголовок документа</w:t></w:r></w:p>\n'
+            '    <w:p><w:r><w:t>Это демонстрационный DOCX-документ для pyqt-omniviewer.</w:t></w:r></w:p>\n'
+            '    <w:p><w:pPr><w:pStyle w:val="Heading2"/></w:pPr><w:r><w:t>Список</w:t></w:r></w:p>\n'
+            '    <w:p><w:pPr><w:numPr><w:ilvl w:val="0"/><w:numId w:val="1"/></w:numPr></w:pPr><w:r><w:t>Первый пункт</w:t></w:r></w:p>\n'
+            '    <w:p><w:pPr><w:numPr><w:ilvl w:val="0"/><w:numId w:val="1"/></w:numPr></w:pPr><w:r><w:t>Второй пункт</w:t></w:r></w:p>\n'
+            '    <w:p><w:pPr><w:numPr><w:ilvl w:val="0"/><w:numId w:val="1"/></w:numPr></w:pPr><w:r><w:t>Третий пункт</w:t></w:r></w:p>\n'
+            '    <w:p><w:r><w:drawing><wp:inline><a:graphic>\n'
+            '      <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">\n'
+            '        <pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">\n'
+            '          <pic:blipFill><a:blip r:embed="rIdImg1"/></pic:blipFill>\n'
+            '        </pic:pic>\n'
+            '      </a:graphicData>\n'
+            '    </a:graphic></wp:inline></w:drawing></w:r></w:p>\n'
+            '  </w:body>\n'
+            '</w:document>',
+        )
+        z.writestr(
+            "docProps/core.xml",
+            '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'
+            '<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties"\n'
+            '                   xmlns:dc="http://purl.org/dc/elements/1.1/">\n'
+            '  <dc:title>Демонстрационный DOCX</dc:title>\n'
+            '  <dc:creator>Omniviewer Demo</dc:creator>\n'
+            '</cp:coreProperties>',
+        )
+    return buf.getvalue()
+
+
+def _write_minimal_doc() -> bytes:
+    """Минимальный OLE2 Compound File с потоком WordDocument (legacy .doc)."""
+    magic = b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1"
+    base_text = (
+        "Заголовок DOC-документа\r\n"
+        "Это демонстрационный legacy DOC-документ для pyqt-omniviewer.\r\n"
+        "Первый пункт\r\nВторой пункт\r\nТретий пункт\r\n"
+    )
+    while len(base_text.encode("utf-8")) < 4100:
+        base_text += "Дополнительный абзац текста для заполнения.\r\n"
+    text_bytes = base_text.encode("utf-8")
+    num_data_sectors = (len(text_bytes) + 511) // 512
+
+    header_data = struct.pack(
+        "<8s16sHHHHHHLLLLLLLLLL",
+        magic,
+        b"\x00" * 16,
+        0x003E,
+        0x0003,
+        0xFFFE,
+        0x0009,
+        0x0006,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0x00001000,
+        0xFFFFFFFE,
+        0,
+        0xFFFFFFFE,
+        0,
+    )
+    difat = struct.pack("<I", 1) + b"".join(struct.pack("<I", 0xFFFFFFFF) for _ in range(108))
+    header = header_data + difat
+
+    fat = bytearray(512)
+    struct.pack_into("<I", fat, 0, 0xFFFFFFFE)
+    struct.pack_into("<I", fat, 4, 0xFFFFFFFD)
+    for i in range(num_data_sectors):
+        sect_id = 2 + i
+        struct.pack_into(
+            "<I", fat, sect_id * 4, sect_id + 1 if i < num_data_sectors - 1 else 0xFFFFFFFE
+        )
+    for i in range(2 + num_data_sectors, 128):
+        struct.pack_into("<I", fat, i * 4, 0xFFFFFFFF)
+
+    dir_sect = bytearray(512)
+    rn = "Root Entry".encode("utf-16-le") + b"\x00\x00"
+    dir_sect[0 : len(rn)] = rn
+    struct.pack_into("<H", dir_sect, 0x40, len(rn))
+    dir_sect[0x42] = 5
+    dir_sect[0x43] = 1
+    struct.pack_into("<I", dir_sect, 0x44, 0xFFFFFFFF)
+    struct.pack_into("<I", dir_sect, 0x48, 0xFFFFFFFF)
+    struct.pack_into("<I", dir_sect, 0x4C, 1)
+    struct.pack_into("<I", dir_sect, 0x74, 0xFFFFFFFE)
+    struct.pack_into("<I", dir_sect, 0x78, 0)
+
+    e1 = 128
+    sn = "WordDocument".encode("utf-16-le") + b"\x00\x00"
+    dir_sect[e1 : e1 + len(sn)] = sn
+    struct.pack_into("<H", dir_sect, e1 + 0x40, len(sn))
+    dir_sect[e1 + 0x42] = 2
+    dir_sect[e1 + 0x43] = 1
+    struct.pack_into("<I", dir_sect, e1 + 0x44, 0xFFFFFFFF)
+    struct.pack_into("<I", dir_sect, e1 + 0x48, 0xFFFFFFFF)
+    struct.pack_into("<I", dir_sect, e1 + 0x4C, 0xFFFFFFFF)
+    struct.pack_into("<I", dir_sect, e1 + 0x74, 2)
+    struct.pack_into("<I", dir_sect, e1 + 0x78, len(text_bytes))
+
+    for idx in range(2, 4):
+        off = idx * 128
+        dir_sect[off + 0x42] = 0
+        struct.pack_into("<I", dir_sect, off + 0x44, 0xFFFFFFFF)
+        struct.pack_into("<I", dir_sect, off + 0x48, 0xFFFFFFFF)
+        struct.pack_into("<I", dir_sect, off + 0x4C, 0xFFFFFFFF)
+
+    data_sectors = bytearray(num_data_sectors * 512)
+    data_sectors[: len(text_bytes)] = text_bytes
+
+    return bytes(header) + bytes(dir_sect) + bytes(fat) + bytes(data_sectors)
+
+
 def build(dest: Path) -> list[Path]:
     """Наполнить ``dest`` всеми скриптуемыми образцами. Идемпотентно.
 
@@ -715,6 +916,11 @@ def build(dest: Path) -> list[Path]:
         _write(dest / "presentations/sample.pptx", _PPTX_SAMPLE),
         _write(dest / "presentations/sample.odp", _ODP_SAMPLE),
         _write(dest / "presentations/sample.ppt", _ppt_bytes()),
+        # Офисные документы: DOCX, legacy DOC, ODT, RTF
+        _write(dest / "documents/sample.docx", _write_minimal_docx()),
+        _write(dest / "documents/sample.doc", _write_minimal_doc()),
+        _write(dest / "documents/sample.odt", _ODT_SAMPLE),
+        _write(dest / "documents/sample.rtf", _RTF_SAMPLE),
         # «Битые» образцы: обрезки валидных файлов — просмотрщик обязан отдать
         # аккуратный «ошибочный» виджет, а не упасть.
         _write(dest / "broken/truncated.png", png[: len(png) // 2]),
@@ -729,6 +935,10 @@ def build(dest: Path) -> list[Path]:
         _write(dest / "broken/truncated.zip", sample_zip[:24]),
         _write(dest / "broken/truncated.mhtml", _mhtml_bytes()[:90]),
         _write(dest / "broken/truncated.pptx", _PPTX_SAMPLE[: len(_PPTX_SAMPLE) // 3]),
+        _write(dest / "broken/truncated.docx", _write_minimal_docx()[:50]),
+        _write(dest / "broken/truncated.doc", _write_minimal_doc()[:50]),
+        _write(dest / "broken/truncated.odt", _ODT_SAMPLE[:50]),
+        _write(dest / "broken/truncated.rtf", _RTF_SAMPLE[:17]),
     ]
     return sorted(written)
 

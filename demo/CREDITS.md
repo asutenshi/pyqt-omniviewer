@@ -32,6 +32,10 @@
 | `presentations/sample.ppt` | PPT (двоичный OLE) | `demo/generate.py` — OLE/CFBF с потоком «PowerPoint Document» собран вручную (stdlib `struct`) | CC0 1.0 |
 | `media/sample.{mp4,mkv,avi,webm,mov}` | короткие видео (~1 с) | синтетический тест-сигнал FFmpeg, сгенерированы однократно, вложены в `generate.py` как base64 | CC0 1.0 |
 | `media/sample.{mp3,flac,wav,ogg,m4a,opus}` | короткое аудио (~1 с) | синтетический тон FFmpeg, сгенерированы однократно, вложены в `generate.py` как base64 | CC0 1.0 |
+| `documents/sample.docx` | DOCX | `demo/generate.py` (минимальный DOCX со структурой и встроенным изображением) | CC0 1.0 |
+| `documents/sample.doc` | DOC (legacy OLE2) | `demo/generate.py` (минимальный OLE2 с потоком WordDocument) | CC0 1.0 |
+| `documents/sample.odt` | ODT (ODF Text) | сгенерирован однократно через `odfpy`, вложен в `generate.py` как base64 | CC0 1.0 |
+| `documents/sample.rtf` | RTF | `demo/generate.py` (чистый текст с разметкой RTF) | CC0 1.0 |
 
 ## Как добавлять новые образцы
 

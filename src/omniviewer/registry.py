@@ -4,6 +4,7 @@ from PyQt6.QtCore import QMimeDatabase
 
 from omniviewer.viewers.archive import ArchiveViewer
 from omniviewer.viewers.base import BaseViewer
+from omniviewer.viewers.document import DocumentViewer
 from omniviewer.viewers.fallback import FallbackViewer
 from omniviewer.viewers.image import ImageViewer
 from omniviewer.viewers.markup import MarkupViewer
@@ -30,6 +31,7 @@ class ViewerRegistry:
         self.register(SpreadsheetViewer)
         self.register(MediaViewer)
         self.register(ArchiveViewer)
+        self.register(DocumentViewer)
         self.register(MarkupViewer)
         self.register(PresentationViewer)
 

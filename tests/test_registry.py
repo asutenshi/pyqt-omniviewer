@@ -8,6 +8,7 @@ from PyQt6.QtWidgets import QApplication
 
 from omniviewer.registry import ViewerRegistry
 from omniviewer.viewers.archive import ArchiveViewer
+from omniviewer.viewers.document import DocumentViewer
 from omniviewer.viewers.fallback import FallbackViewer
 from omniviewer.viewers.image import ImageViewer
 from omniviewer.viewers.markup import MarkupViewer
@@ -92,6 +93,15 @@ FILE_TO_VIEWER = {
     "broken/truncated.mp4": MediaViewer,
     "broken/truncated.mp3": MediaViewer,
     "broken/truncated.zip": ArchiveViewer,
+    # Офисные документы
+    "documents/sample.docx": DocumentViewer,
+    "documents/sample.doc": DocumentViewer,
+    "documents/sample.odt": DocumentViewer,
+    "documents/sample.rtf": DocumentViewer,
+    "broken/truncated.docx": DocumentViewer,
+    "broken/truncated.doc": DocumentViewer,
+    "broken/truncated.odt": DocumentViewer,
+    "broken/truncated.rtf": DocumentViewer,
 }
 
 # Таблица: имя файла из demo/ -> Ожидаемый MIME-тип.
@@ -170,6 +180,15 @@ PATH_TO_MIME = {
     "broken/truncated.mp4": "video/mp4",
     "broken/truncated.mp3": "audio/mpeg",
     "broken/truncated.zip": "application/zip",
+    # Офисные документы
+    "documents/sample.docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "documents/sample.doc": "application/msword",
+    "documents/sample.odt": "application/vnd.oasis.opendocument.text",
+    "documents/sample.rtf": "application/rtf",
+    "broken/truncated.docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "broken/truncated.doc": "application/msword",
+    "broken/truncated.odt": "application/vnd.oasis.opendocument.text",
+    "broken/truncated.rtf": "application/rtf",
 }
 
 @pytest.fixture(scope="session", autouse=True)
@@ -251,8 +270,10 @@ def test_broken_files(qapp, registry, rel_path):
         QThreadPool.globalInstance().waitForDone(2000)
         QApplication.processEvents()
         
-        # FallbackViewer и TextViewer не бросают исключений даже для битых файлов
-        if not isinstance(viewer, (FallbackViewer, TextViewer)):
+        # FallbackViewer и TextViewer не бросают исключений даже для битых файлов;
+        # DocumentViewer для .rtf (striprtf) тоже корректно извлекает что может.
+        is_rtf = rel_path.endswith(".rtf")
+        if not isinstance(viewer, (FallbackViewer, TextViewer)) and not is_rtf:
             assert viewer.is_error_widget, f"Viewer {type(viewer).__name__} did not show error for broken file {rel_path}"
     except Exception as e:
         pytest.fail(f"Viewer {type(viewer).__name__} crashed on broken file {rel_path}: {e}")
@@ -330,6 +351,27 @@ def test_expected_mime(rel_path):
             "application/x-ole-storage",
             "application/octet-stream",
         ]
+    elif rel_path.endswith(".doc") and "truncated" not in rel_path:
+        assert mime in ["application/msword", "application/x-ole-storage", "application/vnd.ms-word"]
+    elif rel_path.endswith(".doc"):
+        # Обрезанный .doc — MIME может быть чем угодно
+        assert mime in [
+            "application/msword", "application/x-ole-storage", "application/octet-stream",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        ]
+    elif rel_path.endswith(".rtf"):
+        assert mime in ["application/rtf", "text/rtf"]
+    elif rel_path.endswith(".odt") and "truncated" in rel_path:
+        # Обрезанный ODT — MIME может определиться неточно
+        assert mime in [
+            "application/vnd.oasis.opendocument.text", "application/zip",
+            "application/octet-stream",
+        ]
+    elif rel_path.endswith(".docx") and "truncated" in rel_path:
+        # Обрезанный DOCX — MIME может определиться неточно
+        assert mime in [
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "application/zip", "application/octet-stream",
+        ]
     else:
         assert mime == expected_mime, f"Expected {expected_mime} for {rel_path}, got {mime}"
-
