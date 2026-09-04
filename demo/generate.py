@@ -277,6 +277,67 @@ echo "pyqt-omniviewer demo: extensionless shell script"
 exit 0
 """
 
+_CONFIG_TOML = """\
+# Демонстрационный TOML-образец.
+name = "demo"
+version = 1
+enabled = true
+tags = ["text", "toml", "sample"]
+
+[author]
+name = "pyqt-omniviewer"
+url = "https://github.com/asutenshi/pyqt-omniviewer"
+
+[[items]]
+id = 1
+title = "first"
+
+[[items]]
+id = 2
+title = "second"
+"""
+
+# Непрозрачный бинарник: не совпадает ни с одной сигнатурой hachoir —
+# fallback обязан показать hex + метаданные и без дерева полей.
+_OPAQUE_BIN = b"OPAQUE\x00\x01\x02\x03\x04\x05" * 64
+
+
+def _big_tree_json() -> bytes:
+    """Крупный структурированный JSON — проверка ленивого дерева / лимита узлов.
+
+    3000 записей верхнего уровня, у каждой — вложенный объект и список. Порядок
+    ключей фиксирован, поэтому генерация детерминирована.
+    """
+    import json
+
+    root = {
+        f"entry_{i:05d}": {
+            "index": i,
+            "even": i % 2 == 0,
+            "label": f"строка №{i}",
+            "nested": {"a": i, "b": i * i, "c": [i, i + 1, i + 2]},
+            "list": list(range(i % 7)),
+        }
+        for i in range(3000)
+    }
+    return (json.dumps(root, ensure_ascii=False, indent=1) + "\n").encode("utf-8")
+
+
+def _midi_bytes() -> bytes:
+    """Минимальный Standard MIDI File (format 0, один трек) — только stdlib.
+
+    Экзотический для приложения формат: своего просмотрщика нет, попадает в
+    fallback, а hachoir его разбирает — дешёвое расширение «поддержки».
+    """
+    track = (
+        b"\x00\xff\x03\x04demo"  # meta: имя трека
+        b"\x00\x90\x3c\x40"  # note on  C4
+        b"\x60\x80\x3c\x40"  # note off C4 (через 96 тиков)
+        b"\x00\xff\x2f\x00"  # end of track
+    )
+    header = b"MThd" + struct.pack(">IHHH", 6, 0, 1, 96)
+    return header + b"MTrk" + struct.pack(">I", len(track)) + track
+
 
 def _csv_bytes(delimiter: str) -> bytes:
     lines = [delimiter.join(row) for row in _TABLE_ROWS]
@@ -1041,8 +1102,14 @@ def build(dest: Path) -> list[Path]:
 
         _write(dest / "data/record.json", record_json),
         _write(dest / "data/config.yaml", _CONFIG_YAML),
+        _write(dest / "data/config.toml", _CONFIG_TOML),
         _write(dest / "data/catalog.xml", catalog_xml),
         _write(dest / "data/settings.ini", _SETTINGS_INI),
+        # Крупный структурированный файл — проверка ленивого дерева структуры.
+        _write(dest / "data/big-tree.json", _big_tree_json()),
+        # Экзотика для fallback: MIDI разбирается hachoir, opaque.bin — нет.
+        _write(dest / "misc/exotic.mid", _midi_bytes()),
+        _write(dest / "misc/opaque.bin", _OPAQUE_BIN),
         _write(dest / "images/swatch.png", png),
         _write(dest / "images/swatch.jpg", jpeg),
         _write(dest / "images/sample.heic", _HEIC_SAMPLE),
@@ -1105,6 +1172,7 @@ def build(dest: Path) -> list[Path]:
         _write(dest / "broken/truncated.jpg", jpeg[: len(jpeg) // 3]),
         _write(dest / "broken/truncated.json", record_json[:60]),
         _write(dest / "broken/truncated.xml", catalog_xml[:80]),
+        _write(dest / "broken/truncated.toml", b'name = "demo\nversion = [1, 2'),
         _write(dest / "broken/truncated.pdf", pdf[: 10]),
         _write(dest / "broken/truncated.mp4", mp4[:10]),
         _write(dest / "broken/truncated.mp3", _MP3[:10]),

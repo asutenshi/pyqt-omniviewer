@@ -8,6 +8,8 @@ from PyQt6.QtWidgets import (
     QSplitter,
     QTableView,
     QTextEdit,
+    QTreeWidget,
+    QTreeWidgetItem,
     QVBoxLayout,
     QWidget,
 )
@@ -17,16 +19,28 @@ from omniviewer.viewers.base import BaseViewer
 
 ## @brief Fallback-просмотрщик для любых типов файлов.
 #
-# Показывает окно первых N КБ текстом, hex-дамп с ASCII-колонкой
-# и таблицу базовых метаданных (размер, MIME, даты).
+# Показывает окно первых N КБ текстом, hex-дамп с ASCII-колонкой,
+# таблицу базовых метаданных (размер, MIME, даты) и — для бинарных форматов,
+# которые распознаёт hachoir — разобранное дерево полей. Нераспознанный формат
+# просто не получает дерева: hex и метаданные остаются.
 class FallbackViewer(BaseViewer):
     mime_types: tuple[str, ...] = ("*/*",)
     extensions: tuple[str, ...] = ()
     priority: int = -100
 
+    ## @brief Файлы крупнее этого не отдаём в hachoir (защита от долгого разбора).
+    MAX_HACHOIR_BYTES = 64 * 1024 * 1024
+    ## @brief Совокупный предел числа узлов дерева полей.
+    MAX_HACHOIR_NODES = 4000
+    ## @brief Предел детей одного узла дерева полей.
+    MAX_HACHOIR_SIBLINGS = 512
+    ## @brief Предел глубины дерева полей.
+    MAX_HACHOIR_DEPTH = 8
+
     def __init__(self, parent=None, max_preview_bytes: int = 16 * 1024):
         super().__init__()
         self.max_preview_bytes = max_preview_bytes
+        self._hachoir_nodes = 0
 
         self._layout.setContentsMargins(4, 4, 4, 4)
         self._layout.setSpacing(4)
@@ -71,7 +85,19 @@ class FallbackViewer(BaseViewer):
         meta_layout.addWidget(self.metadata_table)
         self.splitter.addWidget(meta_widget)
 
-        self.splitter.setSizes([150, 200, 150])
+        # 4. Дерево полей hachoir (только если формат распознан)
+        self.hachoir_widget = QWidget()
+        hachoir_layout = QVBoxLayout(self.hachoir_widget)
+        hachoir_layout.setContentsMargins(0, 0, 0, 0)
+        hachoir_layout.addWidget(QLabel("Дерево полей (hachoir):"))
+        self.hachoir_tree = QTreeWidget()
+        self.hachoir_tree.setHeaderLabels(["Поле", "Значение", "Описание"])
+        self.hachoir_tree.setColumnCount(3)
+        hachoir_layout.addWidget(self.hachoir_tree)
+        self.splitter.addWidget(self.hachoir_widget)
+        self.hachoir_widget.hide()
+
+        self.splitter.setSizes([150, 200, 150, 200])
 
     def load(self, path: Path) -> None:
         raw_bytes = b""
@@ -139,3 +165,66 @@ class FallbackViewer(BaseViewer):
             model.appendRow([item_key, item_val])
 
         self.metadata_table.setModel(model)
+
+        # 4. Дерево полей hachoir
+        self._populate_hachoir(path)
+
+    def _populate_hachoir(self, path: Path) -> None:
+        """Разобрать файл hachoir'ом и показать дерево полей; при неудаче — скрыть.
+
+        Никогда не бросает: нераспознанный или проблемный формат просто остаётся
+        без дерева (hex + метаданные уже показаны).
+        """
+        self.hachoir_tree.clear()
+        self.hachoir_widget.hide()
+        self._hachoir_nodes = 0
+        try:
+            if not path.is_file() or path.stat().st_size > self.MAX_HACHOIR_BYTES:
+                return
+            from hachoir.core import config as hachoir_config
+            from hachoir.field import FieldSet
+            from hachoir.parser import createParser
+
+            hachoir_config.quiet = True
+            parser = createParser(str(path))
+            if parser is None:
+                return
+            with parser:
+                root = QTreeWidgetItem([
+                    getattr(parser, "description", None) or path.name, "", ""
+                ])
+                self.hachoir_tree.addTopLevelItem(root)
+                self._fill_hachoir(root, parser, FieldSet, depth=0)
+                root.setExpanded(True)
+            if root.childCount() > 0:
+                self.hachoir_widget.show()
+        except Exception:  # noqa: BLE001 - hachoir не должен ронять fallback
+            self.hachoir_tree.clear()
+            self.hachoir_widget.hide()
+
+    def _fill_hachoir(self, parent_item, fieldset, field_set_cls, depth: int) -> None:
+        if depth > self.MAX_HACHOIR_DEPTH:
+            return
+        for siblings, field in enumerate(fieldset):
+            if self._hachoir_nodes >= self.MAX_HACHOIR_NODES:
+                return
+            if siblings >= self.MAX_HACHOIR_SIBLINGS:
+                parent_item.addChild(QTreeWidgetItem(["…", "", ""]))
+                return
+            self._hachoir_nodes += 1
+
+            is_set = isinstance(field, field_set_cls)
+            try:
+                value = "" if is_set else str(field.display)
+            except Exception:  # noqa: BLE001
+                value = "?"
+            node = QTreeWidgetItem([
+                field.name, value, getattr(field, "description", "") or ""
+            ])
+            parent_item.addChild(node)
+
+            if is_set:
+                try:
+                    self._fill_hachoir(node, field, field_set_cls, depth + 1)
+                except Exception:  # noqa: BLE001
+                    node.addChild(QTreeWidgetItem(["[ошибка разбора]", "", ""]))

@@ -19,6 +19,7 @@ from omniviewer.viewers.media import MediaViewer
 from omniviewer.viewers.pdf import PdfViewer
 from omniviewer.viewers.presentation import PresentationViewer
 from omniviewer.viewers.spreadsheet import SpreadsheetViewer
+from omniviewer.viewers.structure import StructureViewer
 from omniviewer.viewers.text import TextViewer
 
 DEMO_DIR = Path(__file__).parent.parent / "demo"
@@ -36,10 +37,14 @@ FILE_TO_VIEWER = {
     "data/table.xlsx": SpreadsheetViewer,
     "data/table.xls": SpreadsheetViewer,
     "data/table.ods": SpreadsheetViewer,
-    "data/record.json": TextViewer,
-    "data/config.yaml": TextViewer,
-    "data/catalog.xml": TextViewer,
+    "data/record.json": StructureViewer,
+    "data/config.yaml": StructureViewer,
+    "data/catalog.xml": StructureViewer,
     "data/settings.ini": TextViewer,
+    "data/config.toml": StructureViewer,
+    "data/big-tree.json": StructureViewer,
+    "misc/exotic.mid": FallbackViewer,
+    "misc/opaque.bin": FallbackViewer,
     "images/swatch.png": ImageViewer,
     "images/swatch.jpg": ImageViewer,
     "images/swatch.gif": ImageViewer,
@@ -99,8 +104,9 @@ FILE_TO_VIEWER = {
     "broken/truncated.png": ImageViewer,
     "broken/truncated.jpg": ImageViewer,
     "broken/truncated.svg": ImageViewer,
-    "broken/truncated.json": TextViewer,
-    "broken/truncated.xml": TextViewer,
+    "broken/truncated.json": StructureViewer,
+    "broken/truncated.xml": StructureViewer,
+    "broken/truncated.toml": StructureViewer,
     "broken/truncated.pdf": PdfViewer,
     "broken/truncated.xlsx": SpreadsheetViewer,
     "broken/truncated.mp4": MediaViewer,
@@ -133,6 +139,10 @@ PATH_TO_MIME = {
     "data/config.yaml": "application/x-yaml", # Или application/yaml
     "data/catalog.xml": "text/xml", # Или application/xml
     "data/settings.ini": "application/octet-stream", # По умолчанию
+    "data/config.toml": "application/toml",
+    "data/big-tree.json": "application/json",
+    "misc/exotic.mid": "audio/midi",
+    "misc/opaque.bin": "application/octet-stream",
     "images/swatch.png": "image/png",
     "images/swatch.jpg": "image/jpeg",
     "images/swatch.gif": "image/gif",
@@ -198,6 +208,7 @@ PATH_TO_MIME = {
     "broken/truncated.svg": "image/svg+xml",
     "broken/truncated.json": "application/json",
     "broken/truncated.xml": "text/xml",
+    "broken/truncated.toml": "application/toml",
     "broken/truncated.pdf": "application/pdf",
     "broken/truncated.xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     "broken/truncated.mp4": "video/mp4",
@@ -415,6 +426,12 @@ def test_expected_mime(rel_path):
             "application/octet-stream", "font/woff", "font/woff2",
             "application/font-woff", "application/font-woff2",
         ]
+    elif rel_path.endswith(".toml"):
+        assert mime in [
+            "application/toml", "text/plain", "text/x-toml", "application/octet-stream",
+        ]
+    elif rel_path.endswith(".mid"):
+        assert mime in ["audio/midi", "audio/x-midi", "audio/mid"]
     elif rel_path.endswith(".eml"):
         assert mime in ["message/rfc822", "text/plain", "application/octet-stream"]
     elif rel_path.endswith(".msg"):

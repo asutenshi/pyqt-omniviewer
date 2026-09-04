@@ -1,0 +1,17 @@
+# Демонстрационный TOML-образец.
+name = "demo"
+version = 1
+enabled = true
+tags = ["text", "toml", "sample"]
+
+[author]
+name = "pyqt-omniviewer"
+url = "https://github.com/asutenshi/pyqt-omniviewer"
+
+[[items]]
+id = 1
+title = "first"
+
+[[items]]
+id = 2
+title = "second"
