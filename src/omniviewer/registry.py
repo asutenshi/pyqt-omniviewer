@@ -15,6 +15,7 @@ from omniviewer.viewers.media import MediaViewer
 from omniviewer.viewers.pdf import PdfViewer
 from omniviewer.viewers.presentation import PresentationViewer
 from omniviewer.viewers.spreadsheet import SpreadsheetViewer
+from omniviewer.viewers.structure import StructureViewer
 from omniviewer.viewers.text import TextViewer
 
 
@@ -40,6 +41,7 @@ class ViewerRegistry:
         self.register(IpynbViewer)
         self.register(FontViewer)
         self.register(MailViewer)
+        self.register(StructureViewer)
 
     def register(self, viewer_cls: type[BaseViewer]) -> None:
         """Регистрирует класс просмотрщика в реестре."""

@@ -13,6 +13,9 @@ hachoir>=3.3                 # метаданные + дерево полей д
 # --- Текст / код / разметка ---
 Pygments>=2.18
 markdown-it-py>=3.0
+PyYAML>=6.0                  # дерево структуры YAML
+defusedxml>=0.7             # безопасный разбор XML (без XXE/бомб)
+tomli>=2.0; python_version < "3.11"   # tomllib-бэкпорт для Python 3.10
 
 # --- Изображения ---
 Pillow>=10.3
