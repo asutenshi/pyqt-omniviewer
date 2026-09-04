@@ -18,11 +18,11 @@ from pathlib import Path
 
 import pytest
 from PyQt6.QtCore import QUrl
-from PyQt6.QtGui import QTextDocument
+from PyQt6.QtGui import QColor, QPalette, QTextDocument
 from PyQt6.QtWidgets import QApplication, QTextBrowser
 
 from omniviewer.registry import ViewerRegistry
-from omniviewer.viewers.html_render import build_html_browser
+from omniviewer.viewers.html_render import build_html_browser, code_block_palette
 from omniviewer.viewers.markup import MarkupViewer
 
 # PNG 1×1 (прозрачный) — CC0, для инлайна в MHTML.
@@ -42,6 +42,19 @@ def qapp():
 @pytest.fixture
 def registry() -> ViewerRegistry:
     return ViewerRegistry()
+
+
+@pytest.fixture
+def dark_qt_theme(qapp):
+    """Форсировать тёмную палитру Qt на время теста (тёмный QPalette.Base)."""
+    old = qapp.palette()
+    dark = QPalette(old)
+    dark.setColor(QPalette.ColorRole.Base, QColor("#1e1e1e"))
+    dark.setColor(QPalette.ColorRole.Text, QColor("#e0e0e0"))
+    dark.setColor(QPalette.ColorRole.Window, QColor("#2b2b2b"))
+    qapp.setPalette(dark)
+    yield
+    qapp.setPalette(old)
 
 
 # --------------------------------------------------------------------------- #
@@ -144,6 +157,36 @@ def test_fenced_block_with_unknown_language_is_wrapped_and_escaped(tmp_path: Pat
     html = viewer.rendered_html
     assert "color:#1a1a1a" in html
     assert "&lt;b&gt;" in html and "&amp;" in html
+
+
+def test_code_block_palette_follows_qt_base_lightness(qapp) -> None:
+    light = QPalette()
+    light.setColor(QPalette.ColorRole.Base, QColor("#ffffff"))
+    dark = QPalette()
+    dark.setColor(QPalette.ColorRole.Base, QColor("#202020"))
+
+    assert code_block_palette(light).is_dark is False
+    assert code_block_palette(dark).is_dark is True
+
+
+def test_dark_theme_code_block_has_dark_bg_and_readable_text(tmp_path: Path, dark_qt_theme) -> None:
+    """На тёмной теме блок кода: тёмный фон, светлый текст, читаемые как
+    нераспознанные токены, так и блок с неизвестным языком."""
+    md = tmp_path / "code.md"
+    md.write_text(
+        "```python\nx = 1  # unrecognised tail тут\n```\n\n"
+        "```nosuchlang-xyz\nвесь блок нераспознан\n```\n",
+        encoding="utf-8",
+    )
+    viewer = MarkupViewer()
+    viewer.safe_load(md)
+
+    assert not viewer.is_error_widget
+    html = viewer.rendered_html
+    assert "background:#1e1e1e" in html
+    assert "color:#d4d4d4" in html
+    # светлый цвет текста из светлой палитры не просочился
+    assert "color:#1a1a1a" not in html
 
 
 # --------------------------------------------------------------------------- #

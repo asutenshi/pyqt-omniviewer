@@ -18,9 +18,58 @@ from __future__ import annotations
 
 import base64
 from collections.abc import Mapping
+from dataclasses import dataclass
 
 from PyQt6.QtCore import QByteArray, QUrl
-from PyQt6.QtWidgets import QTextBrowser
+from PyQt6.QtGui import QPalette
+from PyQt6.QtWidgets import QApplication, QTextBrowser
+
+
+## @brief Палитра блока кода, подобранная под светлоту темы Qt.
+#
+# ``pygments`` с ``noclasses`` (Markdown) и таблица стилей ``.highlight``
+# (ноутбуки) красят только распознанные токены; фон и цвет «обычного» текста
+# блока надо задавать самим. На тёмной теме QTextBrowser это иначе даёт светлый
+# прямоугольник с невидимым (белым по белому) текстом.
+@dataclass(frozen=True)
+class CodeBlockPalette:
+    background: str
+    foreground: str
+    pygments_style: str
+    stderr_background: str
+    stderr_foreground: str
+    is_dark: bool
+
+
+_LIGHT_CODE_BLOCK = CodeBlockPalette(
+    background="#f5f5f5",
+    foreground="#1a1a1a",
+    pygments_style="default",
+    stderr_background="#ffe6e6",
+    stderr_foreground="#5a1a1a",
+    is_dark=False,
+)
+_DARK_CODE_BLOCK = CodeBlockPalette(
+    background="#1e1e1e",
+    foreground="#d4d4d4",
+    pygments_style="monokai",
+    stderr_background="#3a1f1f",
+    stderr_foreground="#f2b8b8",
+    is_dark=True,
+)
+
+
+def code_block_palette(palette: QPalette | None = None) -> CodeBlockPalette:
+    """Подобрать палитру блока кода по светлоте ``QPalette.Base`` активной темы.
+
+    :param palette: палитра для проверки; по умолчанию — палитра ``QApplication``
+        (или нейтральная светлая, если приложение ещё не создано).
+    """
+    if palette is None:
+        app = QApplication.instance()
+        palette = app.palette() if app is not None else QPalette()
+    base = palette.color(QPalette.ColorRole.Base)
+    return _DARK_CODE_BLOCK if base.lightness() < 128 else _LIGHT_CODE_BLOCK
 
 
 def _decode_data_uri(url: QUrl) -> QByteArray | None:

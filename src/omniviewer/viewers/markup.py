@@ -20,7 +20,7 @@ from pygments.util import ClassNotFound
 from PyQt6.QtCore import QMimeType
 
 from omniviewer.viewers.base import BaseViewer
-from omniviewer.viewers.html_render import build_html_browser
+from omniviewer.viewers.html_render import build_html_browser, code_block_palette
 
 _MARKDOWN_SUFFIXES = (".md", ".markdown", ".mdown", ".mkd", ".mdwn")
 _HTML_SUFFIXES = (".html", ".htm", ".xhtml", ".xht")
@@ -38,22 +38,31 @@ def _decode(raw: bytes) -> str:
     return raw.decode("utf-8", errors="replace")
 
 
-# Обёртка блока кода задаёт цвет текста явно: pygments с ``noclasses`` красит
-# только распознанные токены, а остальное (и весь блок, если язык неизвестен)
-# наследовало бы цвет темы QTextBrowser и на тёмной теме сливалось бы со
-# светлым фоном — блок выглядел бы пустым белым прямоугольником.
-_CODE_BLOCK_STYLE = "background:#f5f5f5;color:#1a1a1a;padding:8px;white-space:pre-wrap"
+# Обёртка блока кода задаёт фон и цвет текста явно: pygments с ``noclasses``
+# красит только распознанные токены, а остальное (и весь блок, если язык
+# неизвестен) наследовало бы цвет темы QTextBrowser и на тёмной теме сливалось бы
+# с фоном. Конкретные цвета и стиль pygments выбирает ``code_block_palette`` по
+# текущей теме Qt (см. :mod:`omniviewer.viewers.html_render`).
 
 
 def _highlight_code(code: str, lang: str, _attrs) -> str:
     """Подсветка блока кода pygments'ом со встроенными стилями (без внешнего CSS)."""
+    theme = code_block_palette()
     try:
         lexer = get_lexer_by_name(lang, stripnl=False) if lang else guess_lexer(code)
     except (ClassNotFound, ValueError):
         inner = _html.escape(code, quote=False)
     else:
-        inner = _pyg_highlight(code, lexer, HtmlFormatter(noclasses=True, nowrap=True))
-    return f'<pre style="{_CODE_BLOCK_STYLE}"><code>{inner}</code></pre>'
+        inner = _pyg_highlight(
+            code,
+            lexer,
+            HtmlFormatter(noclasses=True, nowrap=True, style=theme.pygments_style),
+        )
+    style = (
+        f"background:{theme.background};color:{theme.foreground};"
+        "padding:8px;white-space:pre-wrap"
+    )
+    return f'<pre style="{style}"><code>{inner}</code></pre>'
 
 
 _MD = MarkdownIt("commonmark", {"html": False, "linkify": False, "highlight": _highlight_code})

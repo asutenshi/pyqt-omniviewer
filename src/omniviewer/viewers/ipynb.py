@@ -17,7 +17,7 @@ from pathlib import Path
 from PyQt6.QtCore import QMimeType
 
 from omniviewer.viewers.base import BaseViewer
-from omniviewer.viewers.html_render import build_html_browser
+from omniviewer.viewers.html_render import build_html_browser, code_block_palette
 
 _IPYNB_SUFFIXES = (".ipynb",)
 _IPYNB_MIMES = frozenset(
@@ -30,16 +30,23 @@ _IPYNB_MIMES = frozenset(
 
 
 def _style_block() -> str:
-    """Таблица стилей pygments для классов ``.highlight`` + мелкие правки под Qt."""
+    """Таблица стилей pygments для классов ``.highlight`` + мелкие правки под Qt.
+
+    Фон и цвет текста блока кода — из :func:`code_block_palette` по текущей теме
+    Qt: на тёмной теме тёмный фон + светлый стиль pygments, чтобы нераспознанные
+    токены (и весь блок при неизвестном языке) не сливались с фоном.
+    """
     from pygments.formatters import HtmlFormatter
 
-    css = HtmlFormatter().get_style_defs(".highlight")
+    theme = code_block_palette()
+    css = HtmlFormatter(style=theme.pygments_style).get_style_defs(".highlight")
     return (
         "<style>\n"
         f"{css}\n"
-        ".highlight, .highlight pre { background:#f8f8f8; }\n"
+        f".highlight, .highlight pre {{ background:{theme.background}; color:{theme.foreground}; }}\n"
         "pre { white-space: pre-wrap; word-wrap: break-word; }\n"
-        ".output_stderr pre, .output_error pre { background:#ffe6e6; }\n"
+        ".output_stderr pre, .output_error pre { "
+        f"background:{theme.stderr_background}; color:{theme.stderr_foreground}; }}\n"
         ".anchor-link { display: none; }\n"
         ".prompt, .input_prompt, .output_prompt { color:#888; font-family:monospace; }\n"
         "</style>\n"
