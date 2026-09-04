@@ -9,6 +9,7 @@ from omniviewer.viewers.image import ImageViewer
 from omniviewer.viewers.markup import MarkupViewer
 from omniviewer.viewers.media import MediaViewer
 from omniviewer.viewers.pdf import PdfViewer
+from omniviewer.viewers.presentation import PresentationViewer
 from omniviewer.viewers.spreadsheet import SpreadsheetViewer
 from omniviewer.viewers.text import TextViewer
 
@@ -30,6 +31,7 @@ class ViewerRegistry:
         self.register(MediaViewer)
         self.register(ArchiveViewer)
         self.register(MarkupViewer)
+        self.register(PresentationViewer)
 
     def register(self, viewer_cls: type[BaseViewer]) -> None:
         """Регистрирует класс просмотрщика в реестре."""
