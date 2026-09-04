@@ -10,10 +10,7 @@ Python + PyQt6. Всё рендерится программно, **без за�
 
 ## Демо
 
-<video src="https://github.com/asutenshi/pyqt-omniviewer/raw/main/example.webm" controls width="100%"></video>
-
-Если видео не проигрывается прямо здесь —
-[скачать example.webm](https://github.com/asutenshi/pyqt-omniviewer/raw/main/example.webm).
+https://github.com/user-attachments/assets/325a28d6-c7b4-4216-9489-264fbeeb61fc
 
 ## Возможности
 
