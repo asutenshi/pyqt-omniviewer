@@ -135,3 +135,55 @@ def test_filtering(qapp, tmp_path, monkeypatch):
     assert "file_def.txt" not in names
     assert "dir_abc" in names  # Directories are always accepted
 
+
+def test_current_changed_emits_file_selected(qapp, tmp_path, monkeypatch):
+    monkeypatch.setenv('XDG_CONFIG_HOME', str(tmp_path))
+    from omniviewer.settings import AppSettings
+    AppSettings()._settings.clear()
+    (tmp_path / "a.txt").write_text("a")
+    (tmp_path / "sub").mkdir()
+
+    panel = FileTreePanel(tmp_path)
+
+    import time
+
+    from PyQt6.QtCore import QCoreApplication, QItemSelectionModel
+
+    for _ in range(50):
+        QCoreApplication.processEvents()
+        time.sleep(0.01)
+        if panel.source_model.rowCount(panel.source_model.index(str(tmp_path))) >= 2:
+            break
+
+    received: list[Path] = []
+    panel.file_selected.connect(received.append)
+
+    root_idx = panel.tree_view.rootIndex()
+    # Находим строку с файлом a.txt и делаем её текущей — как при навигации стрелками.
+    file_idx = None
+    for i in range(panel.proxy_model.rowCount(root_idx)):
+        idx = panel.proxy_model.index(i, 0, root_idx)
+        if panel.proxy_model.data(idx) == "a.txt":
+            file_idx = idx
+            break
+    assert file_idx is not None
+
+    panel.tree_view.selectionModel().setCurrentIndex(
+        file_idx, QItemSelectionModel.SelectionFlag.SelectCurrent
+    )
+
+    assert received == [tmp_path / "a.txt"]
+
+    # Переход на папку не должен эмитить file_selected.
+    dir_idx = None
+    for i in range(panel.proxy_model.rowCount(root_idx)):
+        idx = panel.proxy_model.index(i, 0, root_idx)
+        if panel.proxy_model.data(idx) == "sub":
+            dir_idx = idx
+            break
+    assert dir_idx is not None
+    panel.tree_view.selectionModel().setCurrentIndex(
+        dir_idx, QItemSelectionModel.SelectionFlag.SelectCurrent
+    )
+    assert received == [tmp_path / "a.txt"]
+

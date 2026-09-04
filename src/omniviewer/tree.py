@@ -121,17 +121,19 @@ class FileTreePanel(QWidget):
         self.tree_view.setSortingEnabled(True)
         self.tree_view.setSelectionMode(QTreeView.SelectionMode.SingleSelection)
         self.tree_view.doubleClicked.connect(self._on_tree_double_clicked)
-        self.tree_view.clicked.connect(self._on_tree_clicked)
-        
+
         # Models
         self.source_model = QFileSystemModel()
         self.source_model.setReadOnly(True)
         # Watcher should be active. QFileSystemModel automatically uses QFileSystemWatcher.
-        
+
         self.proxy_model = TreeProxyModel(self)
         self.proxy_model.setSourceModel(self.source_model)
-        
+
         self.tree_view.setModel(self.proxy_model)
+        # Реагируем на смену текущего элемента — это покрывает и клик мышью,
+        # и навигацию стрелками с клавиатуры: превью меняется вместе с выбором.
+        self.tree_view.selectionModel().currentChanged.connect(self._on_current_changed)
         self.tree_view.header().sortIndicatorChanged.connect(self._on_header_sort_changed)
         
         layout.addWidget(self.tree_view)
@@ -265,8 +267,10 @@ class FileTreePanel(QWidget):
             path = Path(self.source_model.filePath(source_index))
             self.set_root_path(path)
 
-    def _on_tree_clicked(self, index: QModelIndex):
-        source_index = self.proxy_model.mapToSource(index)
+    def _on_current_changed(self, current: QModelIndex, previous: QModelIndex):
+        if not current.isValid():
+            return
+        source_index = self.proxy_model.mapToSource(current)
         if not self.source_model.isDir(source_index):
             path = Path(self.source_model.filePath(source_index))
             self.file_selected.emit(path)
