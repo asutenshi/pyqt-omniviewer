@@ -32,6 +32,7 @@ https://github.com/user-attachments/assets/325a28d6-c7b4-4216-9489-264fbeeb61fc
 | Группа | Форматы |
 |---|---|
 | Текст / код | txt, исходный код с подсветкой синтаксиса (py, c, cpp, h, js, html, css, sh, bat, ps1 и др. через Pygments), json, yaml, xml, toml, ini, log, md, csv, tsv — как текст |
+| Разметка | Markdown (markdown-it-py, подсветка кода pygments), HTML/HTM/XHTML, MHTML (ресурсы инлайнятся) — рендер в QTextBrowser (HTML4/CSS2.1), строго офлайн |
 | Документы и книги | PDF, EPUB, MOBI, FB2, CBZ, XPS/OXPS (постранично, PyMuPDF) |
 | Таблицы | XLSX, XLSM, XLS, ODS, CSV, TSV |
 | Изображения | PNG, JPEG, GIF, BMP, WebP, TIFF (многостраничный — листание кадров), ICO, SVG, HEIC/HEIF, AVIF, RAW (CR2/CR3/NEF/ARW/DNG/RAF/ORF/RW2 — по встроенному превью-JPEG) |
@@ -44,7 +45,6 @@ https://github.com/user-attachments/assets/325a28d6-c7b4-4216-9489-264fbeeb61fc
 
 | Группа | Форматы |
 |---|---|
-| Разметка | Markdown в отрендеренном виде, HTML, MHTML, XHTML (базовый HTML4/CSS2.1 движком Qt) |
 | Офисные документы | DOCX, DOC, ODT, RTF, PPTX, PPT, ODP (структура + текст + вложенные изображения) |
 | Ноутбуки | ipynb (отрендеренный) |
 | Аудио | теги и обложка в панели свойств |
