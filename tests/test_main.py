@@ -71,6 +71,25 @@ def test_cli_help(monkeypatch, capsys):
     out, _ = capsys.readouterr()
     assert "OmniViewer" in out
 
+def test_about_action_opens_about_dialog(qapp, monkeypatch):
+    from omniviewer.about_dialog import AboutDialog
+
+    opened = {}
+
+    def fake_exec(self):
+        opened["dialog"] = self
+        return 0
+
+    monkeypatch.setattr(AboutDialog, "exec", fake_exec)
+
+    window = MainWindow(Path.home())
+    assert window.about_action is not None
+
+    window.about_action.trigger()
+
+    assert isinstance(opened.get("dialog"), AboutDialog)
+
+
 def test_close_saves_settings(qapp):
 
     from omniviewer.settings import AppSettings
