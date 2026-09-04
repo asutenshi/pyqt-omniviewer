@@ -13,6 +13,7 @@ from omniviewer.viewers.fallback import FallbackViewer
 from omniviewer.viewers.font import FontViewer
 from omniviewer.viewers.image import ImageViewer
 from omniviewer.viewers.ipynb import IpynbViewer
+from omniviewer.viewers.mail import MailViewer
 from omniviewer.viewers.markup import MarkupViewer
 from omniviewer.viewers.media import MediaViewer
 from omniviewer.viewers.pdf import PdfViewer
@@ -92,6 +93,9 @@ FILE_TO_VIEWER = {
     "fonts/sample.woff": FontViewer,
     "fonts/sample.woff2": FontViewer,
     "broken/truncated.ttf": FontViewer,
+    "mail/sample.eml": MailViewer,
+    "mail/sample.msg": MailViewer,
+    "broken/truncated.msg": MailViewer,
     "broken/truncated.png": ImageViewer,
     "broken/truncated.jpg": ImageViewer,
     "broken/truncated.svg": ImageViewer,
@@ -186,6 +190,9 @@ PATH_TO_MIME = {
     "fonts/sample.woff": "application/octet-stream",
     "fonts/sample.woff2": "application/octet-stream",
     "broken/truncated.ttf": "application/x-font-ttf",
+    "mail/sample.eml": "message/rfc822",
+    "mail/sample.msg": "application/vnd.ms-outlook",
+    "broken/truncated.msg": "application/vnd.ms-outlook",
     "broken/truncated.png": "image/png",
     "broken/truncated.jpg": "image/jpeg",
     "broken/truncated.svg": "image/svg+xml",
@@ -407,6 +414,13 @@ def test_expected_mime(rel_path):
         assert mime in [
             "application/octet-stream", "font/woff", "font/woff2",
             "application/font-woff", "application/font-woff2",
+        ]
+    elif rel_path.endswith(".eml"):
+        assert mime in ["message/rfc822", "text/plain", "application/octet-stream"]
+    elif rel_path.endswith(".msg"):
+        assert mime in [
+            "application/vnd.ms-outlook", "application/x-ole-storage",
+            "application/CDFV2", "application/octet-stream",
         ]
     else:
         assert mime == expected_mime, f"Expected {expected_mime} for {rel_path}, got {mime}"
