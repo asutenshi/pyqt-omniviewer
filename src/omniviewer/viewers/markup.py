@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import email
 import email.policy
+import html as _html
 from pathlib import Path
 
 import charset_normalizer
@@ -37,17 +38,22 @@ def _decode(raw: bytes) -> str:
     return raw.decode("utf-8", errors="replace")
 
 
+# Обёртка блока кода задаёт цвет текста явно: pygments с ``noclasses`` красит
+# только распознанные токены, а остальное (и весь блок, если язык неизвестен)
+# наследовало бы цвет темы QTextBrowser и на тёмной теме сливалось бы со
+# светлым фоном — блок выглядел бы пустым белым прямоугольником.
+_CODE_BLOCK_STYLE = "background:#f5f5f5;color:#1a1a1a;padding:8px;white-space:pre-wrap"
+
+
 def _highlight_code(code: str, lang: str, _attrs) -> str:
     """Подсветка блока кода pygments'ом со встроенными стилями (без внешнего CSS)."""
     try:
         lexer = get_lexer_by_name(lang, stripnl=False) if lang else guess_lexer(code)
     except (ClassNotFound, ValueError):
-        return ""  # markdown-it сам экранирует и обернёт в <pre><code>
-    inner = _pyg_highlight(code, lexer, HtmlFormatter(noclasses=True, nowrap=True))
-    return (
-        '<pre style="background:#f5f5f5;padding:8px;white-space:pre-wrap">'
-        f"<code>{inner}</code></pre>"
-    )
+        inner = _html.escape(code, quote=False)
+    else:
+        inner = _pyg_highlight(code, lexer, HtmlFormatter(noclasses=True, nowrap=True))
+    return f'<pre style="{_CODE_BLOCK_STYLE}"><code>{inner}</code></pre>'
 
 
 _MD = MarkdownIt("commonmark", {"html": False, "linkify": False, "highlight": _highlight_code})
