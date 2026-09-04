@@ -2,6 +2,7 @@ from pathlib import Path
 
 from PyQt6.QtCore import QMimeDatabase
 
+from omniviewer.viewers.archive import ArchiveViewer
 from omniviewer.viewers.base import BaseViewer
 from omniviewer.viewers.fallback import FallbackViewer
 from omniviewer.viewers.image import ImageViewer
@@ -26,6 +27,7 @@ class ViewerRegistry:
         self.register(PdfViewer)
         self.register(SpreadsheetViewer)
         self.register(MediaViewer)
+        self.register(ArchiveViewer)
 
     def register(self, viewer_cls: type[BaseViewer]) -> None:
         """Регистрирует класс просмотрщика в реестре."""
