@@ -119,6 +119,33 @@ def test_markdown_code_block_is_highlighted(tmp_path: Path) -> None:
     assert '<span style="color' in viewer.rendered_html
 
 
+def test_code_block_sets_explicit_text_colour_for_dark_theme(tmp_path: Path) -> None:
+    """Регрессия: на тёмной теме QTextBrowser блок кода красил бы текст в белый
+    поверх светлого фона (pygments с noclasses красит только распознанные токены).
+    Обёртка <pre> должна задавать цвет текста явно."""
+    md = tmp_path / "code.md"
+    md.write_text("```python\nx = 1\n```\n", encoding="utf-8")
+    viewer = MarkupViewer()
+    viewer.safe_load(md)
+
+    assert not viewer.is_error_widget
+    assert "color:#1a1a1a" in viewer.rendered_html
+
+
+def test_fenced_block_with_unknown_language_is_wrapped_and_escaped(tmp_path: Path) -> None:
+    """Блок с неизвестным языком тоже оборачивается в стилизованный <pre> (а не
+    отдаётся сырым) и экранируется."""
+    md = tmp_path / "u.md"
+    md.write_text("```nosuchlang-xyz\n<b> & </b>\n```\n", encoding="utf-8")
+    viewer = MarkupViewer()
+    viewer.safe_load(md)
+
+    assert not viewer.is_error_widget
+    html = viewer.rendered_html
+    assert "color:#1a1a1a" in html
+    assert "&lt;b&gt;" in html and "&amp;" in html
+
+
 # --------------------------------------------------------------------------- #
 # HTML / XHTML                                                                #
 # --------------------------------------------------------------------------- #

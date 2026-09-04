@@ -258,6 +258,10 @@ def test_smoke_load(qapp, registry, rel_path):
         assert not viewer.is_error_widget, f"Error widget created for {rel_path}: {viewer.error_message}"
     except Exception as e:
         pytest.fail(f"Exception raised for {rel_path}: {e}")
+    finally:
+        # Освобождаем ресурсы просмотрщика (для MediaViewer — общий QMediaPlayer):
+        # без этого уничтожение MediaViewer с активным конвейером вешает поток.
+        viewer.cancel()
 
 @pytest.mark.parametrize("rel_path", [f for f in get_demo_files() if "broken" in f])
 def test_broken_files(qapp, registry, rel_path):
@@ -282,6 +286,8 @@ def test_broken_files(qapp, registry, rel_path):
             assert viewer.is_error_widget, f"Viewer {type(viewer).__name__} did not show error for broken file {rel_path}"
     except Exception as e:
         pytest.fail(f"Viewer {type(viewer).__name__} crashed on broken file {rel_path}: {e}")
+    finally:
+        viewer.cancel()
 
 def test_unrecognized_file(qapp, registry, tmp_path):
     """
