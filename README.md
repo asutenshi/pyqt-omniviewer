@@ -8,6 +8,12 @@ Python + PyQt6. Всё рендерится программно, **без за�
 > минимальный: задача «показать содержимое», без редакторов и лишнего UX.
 > Полное техзадание и решения — в [SPEC.md](SPEC.md).
 
+## Демо
+
+https://github.com/asutenshi/pyqt-omniviewer/raw/main/example.webm
+
+<video src="https://github.com/asutenshi/pyqt-omniviewer/raw/main/example.webm" controls width="100%"></video>
+
 ## Возможности
 
 - Две панели в перетаскиваемом сплиттере: **просмотр слева, дерево файлов справа**
@@ -23,23 +29,33 @@ Python + PyQt6. Всё рендерится программно, **без за�
 
 ## Поддерживаемые форматы
 
+### Работают сейчас
+
 | Группа | Форматы |
 |---|---|
-| Текст / код | txt, любой исходный код (подсветка), json, yaml, xml, toml, ini, log |
-| Разметка | Markdown, HTML, MHTML, XHTML (базовый HTML4/CSS2.1 движком Qt) |
-| Документы | PDF, EPUB, MOBI, FB2, CBZ, XPS, DOCX, DOC, ODT, RTF |
-| Таблицы | XLSX, XLS, ODS, CSV, TSV |
-| Презентации | PPTX, PPT, ODP |
-| Ноутбуки | ipynb |
-| Изображения | PNG, JPEG, GIF, BMP, WebP, TIFF, ICO, SVG, HEIC/HEIF, AVIF, RAW (CR2/CR3/NEF/ARW/DNG…) |
-| Аудио | MP3, FLAC, WAV, OGG, M4A, Opus (+ теги и обложка) |
+| Текст / код | txt, исходный код с подсветкой синтаксиса (py, c, cpp, h, js, html, css, sh, bat, ps1 и др. через Pygments), json, yaml, xml, toml, ini, log, md, csv, tsv — как текст |
+| Документы и книги | PDF, EPUB, MOBI, FB2, CBZ, XPS/OXPS (постранично, PyMuPDF) |
+| Таблицы | XLSX, XLSM, XLS, ODS, CSV, TSV |
+| Изображения | PNG, JPEG, GIF, BMP, WebP, TIFF, ICO, SVG |
+| Аудио | MP3, FLAC, WAV, OGG, M4A, Opus |
 | Видео | MP4, MKV, AVI, WebM, MOV |
-| Архивы | ZIP, TAR(.gz/.bz2/.xz), 7Z, RAR, ISO, CAB, LHA — просмотр содержимого и вложенных файлов |
+| Любой другой файл | fallback: текст → hex-дамп + базовые метаданные (размер, MIME, даты) |
+
+### В планах
+
+| Группа | Форматы |
+|---|---|
+| Разметка | Markdown в отрендеренном виде, HTML, MHTML, XHTML (базовый HTML4/CSS2.1 движком Qt) |
+| Офисные документы | DOCX, DOC, ODT, RTF, PPTX, PPT, ODP (структура + текст + вложенные изображения) |
+| Ноутбуки | ipynb (отрендеренный) |
+| Изображения | HEIC/HEIF, AVIF, RAW (CR2/CR3/NEF/ARW/DNG…) через встроенный превью |
+| Аудио | теги и обложка в панели свойств |
+| Архивы | ZIP, TAR(.gz/.bz2/.xz), 7Z, RAR, ISO, CAB, LHA — дерево содержимого и вложенные файлы |
 | Шрифты | TTF, OTF, WOFF, WOFF2 (образец начертания) |
 | Почта | EML, MSG |
-| Прочее | любой бинарный формат — дерево полей (hachoir) + hex + метаданные |
+| Прочее | дерево полей произвольного бинарного формата (hachoir) |
 
-Актуальный список пополняется по мере разработки — см. [SPEC.md](SPEC.md).
+Список пополняется по мере разработки — полный план см. в [SPEC.md](SPEC.md).
 
 ## Установка
 
