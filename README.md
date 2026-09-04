@@ -34,6 +34,7 @@ https://github.com/user-attachments/assets/325a28d6-c7b4-4216-9489-264fbeeb61fc
 | Текст / код | txt, исходный код с подсветкой синтаксиса (py, c, cpp, h, js, html, css, sh, bat, ps1 и др. через Pygments), json, yaml, xml, toml, ini, log, md, csv, tsv — как текст |
 | Разметка | Markdown (markdown-it-py, подсветка кода pygments), HTML/HTM/XHTML, MHTML (ресурсы инлайнятся) — рендер в QTextBrowser (HTML4/CSS2.1), строго офлайн |
 | Презентации | PPTX (текст слайдов по порядку + вложенные изображения, python-pptx), ODP (текст слайдов, odfpy), legacy PPT (извлечённый текст) — слайды секциями в QTextBrowser, строго офлайн |
+| Ноутбуки | Jupyter `.ipynb` — nbconvert (шаблон basic) → HTML: ячейки по порядку, Markdown отрендерен, код подсвечен pygments, текстовый и графический вывод; строго офлайн |
 | Документы и книги | PDF, EPUB, MOBI, FB2, CBZ, XPS/OXPS (постранично, PyMuPDF) |
 | Таблицы | XLSX, XLSM, XLS, ODS, CSV, TSV |
 | Офисные документы | DOCX (mammoth → HTML, заголовки/списки/изображения), DOC (olefile — извлечённый текст), ODT (odfpy — структура), RTF (striprtf — текст) |
@@ -47,8 +48,6 @@ https://github.com/user-attachments/assets/325a28d6-c7b4-4216-9489-264fbeeb61fc
 
 | Группа | Форматы |
 |---|---|
-
-| Ноутбуки | ipynb (отрендеренный) |
 | Аудио | теги и обложка в панели свойств |
 | Шрифты | TTF, OTF, WOFF, WOFF2 (образец начертания) |
 | Почта | EML, MSG |
