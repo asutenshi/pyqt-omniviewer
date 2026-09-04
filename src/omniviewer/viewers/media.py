@@ -1,3 +1,4 @@
+import importlib.util
 import traceback
 from pathlib import Path
 
@@ -22,11 +23,7 @@ try:
 except (ImportError, OSError):
     MPV_AVAILABLE = False
 
-try:
-    import mutagen
-    MUTAGEN_AVAILABLE = True
-except ImportError:
-    MUTAGEN_AVAILABLE = False
+MUTAGEN_AVAILABLE = importlib.util.find_spec("mutagen") is not None
 
 
 ## @brief Единственный на процесс QMediaPlayer и его виджеты.
@@ -172,7 +169,7 @@ class MediaViewer(BaseViewer):
     def load(self, path: Path):
         self._path = path
         if path.stat().st_size < 100:
-            raise Exception("File is too small to be valid media")
+            raise ValueError("File is too small to be valid media")
 
         # Audio tags
         if MUTAGEN_AVAILABLE:
@@ -195,7 +192,7 @@ class MediaViewer(BaseViewer):
                     # Extract cover
                     cover_data = None
                     if hasattr(audio, "tags") and audio.tags:
-                        for tag_name, tag in audio.tags.items():
+                        for tag in audio.tags.values():
                             if hasattr(tag, "data") and hasattr(tag, "type") and tag.type == 3 or hasattr(tag, "data") and type(tag).__name__ == "Picture":
                                 cover_data = tag.data
                                 break
@@ -205,7 +202,7 @@ class MediaViewer(BaseViewer):
                         if not pixmap.isNull():
                             self.cover_label.setPixmap(pixmap.scaled(200, 200, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
                             self.cover_label.show()
-            except Exception:
+            except Exception:  # noqa: BLE001, S110 - теги необязательны, разбор best-effort
                 pass
 
         # QMediaPlayer — поднимаем после возврата в цикл событий
@@ -264,7 +261,7 @@ class MediaViewer(BaseViewer):
             self.mpv_player = mpv.MPV(wid=str(int(shared_video.winId())))
             self.mpv_player.play(str(self._path))
             # Just minimal fallback
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001 - запасной движок не должен ронять UI
             self._show_error(e, traceback.format_exc())
 
     def toggle_play(self):
@@ -289,7 +286,7 @@ class MediaViewer(BaseViewer):
         elif self.mpv_player:
             try:
                 self.mpv_player.time_pos = position / 1000.0
-            except Exception:
+            except Exception:  # noqa: BLE001, S110 - перемотка best-effort, mpv не должен ронять UI
                 pass
 
     def set_volume(self, volume):
@@ -298,7 +295,7 @@ class MediaViewer(BaseViewer):
         elif self.mpv_player:
             try:
                 self.mpv_player.volume = volume
-            except Exception:
+            except Exception:  # noqa: BLE001, S110 - громкость best-effort, mpv не должен ронять UI
                 pass
 
     def update_state(self, state):

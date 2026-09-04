@@ -21,3 +21,6 @@ where = ["src"]
 [tool.ruff]
 line-length = 100
 target-version = "py310"
+# demo/ содержит образцы для просмотрщиков, включая намеренно битые/усечённые
+# фикстуры (см. demo/generate.py) — это не исходный код продукта.
+extend-exclude = ["demo"]

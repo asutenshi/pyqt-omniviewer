@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      # Системный apt-список — как в install.sh (install_apt), плюс xvfb для
+      # безголового запуска Qt-тестов.
+      - name: Системные пакеты (apt)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libarchive13 \
+            qt6-image-formats-plugins \
+            libgl1 libegl1 libpulse0 libasound2t64 \
+            libfontconfig1 libfreetype6 \
+            libxrandr2 libxkbcommon0 libxkbcommon-x11-0 libxcb-cursor0 \
+            doxygen xvfb
+          sudo apt-get install -y --no-install-recommends libmpv2 \
+            || echo "   (libmpv2 не поставлен — запасной движок mpv будет недоступен)"
+
+      - name: Python-зависимости
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt -r requirements-dev.txt
+          pip install -e .
+
+      - name: ruff
+        run: ruff check .
+
+      - name: pytest (xvfb, offscreen)
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: xvfb-run -a pytest
+
+      - name: doxygen
+        run: doxygen Doxyfile
