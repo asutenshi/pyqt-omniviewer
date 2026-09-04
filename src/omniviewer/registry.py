@@ -9,6 +9,7 @@ from omniviewer.viewers.fallback import FallbackViewer
 from omniviewer.viewers.font import FontViewer
 from omniviewer.viewers.image import ImageViewer
 from omniviewer.viewers.ipynb import IpynbViewer
+from omniviewer.viewers.mail import MailViewer
 from omniviewer.viewers.markup import MarkupViewer
 from omniviewer.viewers.media import MediaViewer
 from omniviewer.viewers.pdf import PdfViewer
@@ -38,6 +39,7 @@ class ViewerRegistry:
         self.register(PresentationViewer)
         self.register(IpynbViewer)
         self.register(FontViewer)
+        self.register(MailViewer)
 
     def register(self, viewer_cls: type[BaseViewer]) -> None:
         """Регистрирует класс просмотрщика в реестре."""

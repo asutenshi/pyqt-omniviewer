@@ -3,7 +3,8 @@
 
 Наполняет каталог ``demo/`` файлами, которые можно воспроизвести из кода:
 тексты, исходники, ``csv``/``tsv``, ``json``/``yaml``/``xml``/``ini``, простые
-растровые изображения, презентации (pptx/odp/ppt), Jupyter-ноутбук, шрифты (ttf/otf/woff/woff2), большой
+растровые изображения, презентации (pptx/odp/ppt), Jupyter-ноутбук, шрифты (ttf/otf/woff/woff2),
+письма (eml/msg), большой
 текстовый файл для проверки оконного чтения, набор «битых» (обрезанных)
 образцов и файл без расширения с распознаваемым содержимым.
 
@@ -585,6 +586,77 @@ _WOFF2_SAMPLE = base64.b64decode(
     "d09GMgABAAAAAAMEAAoAAAAAFYgAAAK3AAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAABmAAZAqZbI5KATYCJAOBKguBKgAEIAWFGgeFPBuHDhEVlECArxO4OaF11HIIPsSRQlKApdAWZEwkR1O9pt+P+S+yV4xQyeGB9vf9mZn7FuAsjCg7lHWITJvxxcokRycGAAqw7cM8RfKfH2eY3nEnD0Q6HMsZhl489EeADqfGzOiOE56kBx7+/76fdu+umf4KaDqUWECZzgNN4/K/HjdO2GwRfZCA8sgyiuyJR5RzttlSiVuQIJZq9CoWVCP73VCywY4Jg9FXClJeTdCTs9L/Q1/hIdSqa5Y0K8ZdaFKgYlCx4pBD7AcMKqKs8mpiyXD+D3QhRZVXAZ2Gw3//33rjtReee7YXSGsNzafsPwJ5gMpQNkmUnLSlZ/CKtcl2+xXSdSor/59yiVd/XqVi43yjev7rzlcclykhX3jQd+9Ou332LwulvsC79T4APt34PZYYMlReBYWsHHoPmJcNGXWJJz+nJ0W0/CpstQBqsOAKcDPU044zBKzFxnEI7IkNiTk5oQitOAzcGwoTtmx+bIZbWyiEYQm0cLiEwA8hsRN+oSgR0WEQayFMeDmuZUa0mxVAvOalU//3n6Fpn7FH5zYXJ2dixsLYYBTpgHWulGOvunNs+keWRxJvykqajlnfy0pYFG7QwxNe/XSVcKzDPEW2GI8mgVj/83FoJma7Rga7NT3jo52DY1p/OcXFyZmYaBobn9uLvfO9U1Wp9+3xclqq7tSl6Squ7p8d6dRTu90nq8tNMZjKupPzVPamJ+tyOqYHx6e09ON0nO36D5CZv7YGMRhNZovVZnc4XW6P1wcgwoQyLqTSxrogjOIkzfKirOqm7fphnOZl3fbjvO7n/X6PMBDKuJCKqumGadmO683/jxfyMKGMC6lsx/XytClhQoFxIZW280xCAAAAAADacFwvz6IRYUKBcSFV7jZnQoFxIZW2HdfL0xaECQXGhVSp25OZMJlQAA=="
 )
 
+_MSG_SAMPLE = base64.b64decode(
+    "0M8R4KGxGuEAAAAAAAAAAAAAAAAAAAAAPgADAP7/CQAGAAAAAAAAAAAAAAABAAAAAQAAAAAAAAAAEAAABgAAAAEAAAD+////AAAAAAAAAAD////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////9////AgAAAAMAAAAEAAAABQAAAP7////+////CAAAAAkAAAAKAAAA/v///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////1IAbwBvAHQAIABFAG4AdAByAHkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWAAUB//////////8LAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABwAAAEAGAAAAAAAAXwBfAHAAcgBvAHAAZQByAHQAaQBlAHMAXwB2AGUAcgBzAGkAbwBuADEALgAwAAAAAAAAAAAAAAAAAAAAAAAAADAAAgH///////////////8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAABfAF8AbgBhAG0AZQBpAGQAXwB2AGUAcgBzAGkAbwBuADEALgAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAKAABAf//////////BAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAF8AXwBzAHUAYgBzAHQAZwAxAC4AMABfADAAMAAwADIAMAAxADAAMgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAqAAIB////////////////AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/v///wAAAAAAAAAAXwBfAHMAdQBiAHMAdABnADEALgAwAF8AMAAwADAAMwAwADEAMAAyAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACoAAgEDAAAABQAAAP////8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD+////AAAAAAAAAABfAF8AcwB1AGIAcwB0AGcAMQAuADAAXwAwADAAMAA0ADAAMQAwADIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAKgACAf///////////////wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP7///8AAAAAAAAAAF8AXwBzAHUA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BQAAAAYAAAAHAAAACAAAAP7////+/////v////7////+/////v////7///8QAAAAEQAAAP7///8TAAAAFAAAAP7////+/////v////7////+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA5AAYAAAAAHGD3l5/aAUAABg4GAAAAABxg95ef2gFGAHIAbwBtADoAIAAQBDsEOARBBDAEIAAfBEAEOAQ8BDUEQAQgADwAYQBsAGkAYwBlAEAAZQB4AGEAbQBwAGwAZQAuAGMAbwBtAD4ADQAKAFQAbwA6ACAAEQQ+BDEEIAAfBD4EOwRDBEcEMARCBDUEOwRMBCAAPABiAG8AYgBAAGUAeABhAG0AcABsAGUALgBjAG8AbQA+AA0ACgBDAGMAOgAgAGMAYQByAG8AbABAAGUAeABhAG0AcABsAGUALgBjAG8AbQANAAoAUwB1AGIAagBlAGMAdAA6ACAAIgQ1BDwEMAQgAD8EOARBBEwEPAQwBCAAOAQ3BCAATQBTAEcADQAKAEQAYQB0AGUAOgAgAE0AbwBuACwAIAAwADYAIABNAGEAeQAgADIAMAAyADQAIAAwADkAOgAzADAAOgAwADAAIAArADAAMAAwADAADQAKAE0A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"
+)
+
+
+def _eml_bytes() -> bytes:
+    """Письмо .eml (RFC 822) с фиксированными границами частей — детерминировано.
+
+    ``multipart/mixed`` → [ ``multipart/related`` → [ ``multipart/alternative``
+    → [ ``text/plain``, ``text/html`` ], инлайновый PNG ``cid:swatch`` ],
+    вложение ``text/plain`` (``note.txt``) ]. Тема — RFC 2047 (UTF-8, base64).
+    """
+    png = "\r\n".join(base64.encodebytes(_swatch_png()).decode("ascii").splitlines())
+    note = base64.b64encode("Вложение письма .eml.\nВторая строка.\n".encode()).decode("ascii")
+    subject = "=?utf-8?B?" + base64.b64encode("Тема письма .eml".encode()).decode("ascii") + "?="
+    text = (
+        "From: Alice Example <alice@example.com>\r\n"
+        "To: Bob Recipient <bob@example.com>\r\n"
+        "Cc: carol@example.com\r\n"
+        f"Subject: {subject}\r\n"
+        "Date: Mon, 06 May 2024 09:30:00 +0000\r\n"
+        "Message-ID: <demo-eml-0001@omniviewer>\r\n"
+        "MIME-Version: 1.0\r\n"
+        'Content-Type: multipart/mixed; boundary="MIX"\r\n'
+        "\r\n"
+        "--MIX\r\n"
+        'Content-Type: multipart/related; boundary="REL"\r\n'
+        "\r\n"
+        "--REL\r\n"
+        'Content-Type: multipart/alternative; boundary="ALT"\r\n'
+        "\r\n"
+        "--ALT\r\n"
+        'Content-Type: text/plain; charset="utf-8"\r\n'
+        "Content-Transfer-Encoding: 8bit\r\n"
+        "\r\n"
+        "Здравствуйте!\r\n\r\nЭто текстовая часть письма .eml.\r\nСтрока вторая.\r\n"
+        "\r\n"
+        "--ALT\r\n"
+        'Content-Type: text/html; charset="utf-8"\r\n'
+        "Content-Transfer-Encoding: 8bit\r\n"
+        "\r\n"
+        "<html><body><p>Здравствуйте!</p>"
+        "<p>Это <b>HTML</b>-часть письма <code>.eml</code>.</p>"
+        '<img src="cid:swatch@omniviewer" alt="swatch">'
+        '<p><a href="http://example.com/">внешняя ссылка (не грузится)</a></p>'
+        "</body></html>\r\n"
+        "\r\n"
+        "--ALT--\r\n"
+        "\r\n"
+        "--REL\r\n"
+        "Content-Type: image/png\r\n"
+        "Content-Transfer-Encoding: base64\r\n"
+        "Content-ID: <swatch@omniviewer>\r\n"
+        'Content-Disposition: inline; filename="swatch.png"\r\n'
+        "\r\n"
+        f"{png}\r\n"
+        "\r\n"
+        "--REL--\r\n"
+        "\r\n"
+        "--MIX\r\n"
+        'Content-Type: text/plain; charset="utf-8"\r\n'
+        "Content-Transfer-Encoding: base64\r\n"
+        'Content-Disposition: attachment; filename="note.txt"\r\n'
+        "\r\n"
+        f"{note}\r\n"
+        "\r\n"
+        "--MIX--\r\n"
+    )
+    return text.encode("utf-8")
+
+
 _MARKDOWN_SAMPLE = """\
 # Демонстрация Markdown
 
@@ -1023,6 +1095,10 @@ def build(dest: Path) -> list[Path]:
         _write(dest / "fonts/sample.otf", _OTF_SAMPLE),
         _write(dest / "fonts/sample.woff", _WOFF_SAMPLE),
         _write(dest / "fonts/sample.woff2", _WOFF2_SAMPLE),
+        # Почта: EML собран из строки с фиксированными границами, MSG —
+        # минимальный CFBF/OLE2 (собран вручную скриптом), вложён как base64.
+        _write(dest / "mail/sample.eml", _eml_bytes()),
+        _write(dest / "mail/sample.msg", _MSG_SAMPLE),
         # «Битые» образцы: обрезки валидных файлов — просмотрщик обязан отдать
         # аккуратный «ошибочный» виджет, а не упасть.
         _write(dest / "broken/truncated.png", png[: len(png) // 2]),
@@ -1043,6 +1119,7 @@ def build(dest: Path) -> list[Path]:
         _write(dest / "broken/truncated.rtf", _RTF_SAMPLE[:17]),
         _write(dest / "broken/truncated.ipynb", _ipynb_bytes()[: len(_ipynb_bytes()) // 3]),
         _write(dest / "broken/truncated.ttf", _TTF_SAMPLE[: len(_TTF_SAMPLE) // 3]),
+        _write(dest / "broken/truncated.msg", _MSG_SAMPLE[: len(_MSG_SAMPLE) // 3]),
     ]
     return sorted(written)
 

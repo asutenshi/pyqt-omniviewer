@@ -9,8 +9,9 @@
 `json`/`yaml`/`xml`/`ini`, архивы `zip`/`tar.gz`/`ar`/вложенный `zip`, разметка
 `md`/`html`/`xhtml`/`mhtml` с инлайновой картинкой, презентация `ppt`
 (двоичный OLE/CFBF собран вручную из stdlib `struct`), Jupyter-ноутбук `ipynb`
-(с выводом-картинкой), большой текстовый файл, «битые» обрезки, файл без
-расширения). Автор — этот репозиторий, лицензия
+(с выводом-картинкой), письмо `eml` (RFC 822 с фиксированными границами частей,
+инлайновая картинка и вложение), большой текстовый файл, «битые» обрезки, файл
+без расширения). Автор — этот репозиторий, лицензия
 **CC0 1.0**. Воспроизводятся командой
 `python demo/generate.py` и не требуют отдельной атрибуции.
 
@@ -41,6 +42,7 @@
 | `fonts/sample.otf` | OpenType/CFF, 84 глифа | построен однократно через `fontTools.fontBuilder`, вложён в `generate.py` как base64 | CC0 1.0 |
 | `fonts/sample.woff` | WOFF (тот же TTF в web-обёртке) | `fontTools` (`flavor="woff"`), вложён в `generate.py` как base64 | CC0 1.0 |
 | `fonts/sample.woff2` | WOFF2 (тот же TTF, brotli) | `fontTools` (`flavor="woff2"`), вложён в `generate.py` как base64 | CC0 1.0 |
+| `mail/sample.msg` | Outlook MSG (минимальный CFBF/OLE2) | собран вручную скриптом (CFBF с мини-FAT, stdlib `struct`), вложён в `generate.py` как base64 | CC0 1.0 |
 
 ## Как добавлять новые образцы
 
