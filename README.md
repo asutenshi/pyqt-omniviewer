@@ -1,5 +1,7 @@
 # pyqt-omniviewer
 
+[![CI](https://github.com/asutenshi/pyqt-omniviewer/actions/workflows/ci.yml/badge.svg)](https://github.com/asutenshi/pyqt-omniviewer/actions/workflows/ci.yml)
+
 Двухпанельный десктоп-просмотрщик для **максимального числа типов файлов**.
 Python + PyQt6. Всё рендерится программно, **без запуска сторонних приложений**.
 

@@ -1,11 +1,12 @@
 import csv
-import math
 from pathlib import Path
 
-from PyQt6.QtCore import Qt, QAbstractTableModel, QModelIndex, QVariant, QMimeType
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QTableView, QComboBox
+from PyQt6.QtCore import QAbstractTableModel, QMimeType, QModelIndex, Qt, QVariant
+from PyQt6.QtWidgets import QComboBox, QTableView
 
 from omniviewer.viewers.base import BaseViewer
+
+_ROOT = QModelIndex()
 
 ## @brief Ленивая модель таблицы для QTableView.
 class LazyTableModel(QAbstractTableModel):
@@ -17,11 +18,11 @@ class LazyTableModel(QAbstractTableModel):
         self._exhausted = False
         self.fetchMore(QModelIndex())
 
-    def rowCount(self, parent=QModelIndex()):
+    def rowCount(self, parent=_ROOT):
         if parent.isValid(): return 0
         return len(self._data)
 
-    def columnCount(self, parent=QModelIndex()):
+    def columnCount(self, parent=_ROOT):
         if parent.isValid(): return 0
         return len(self._headers)
 
@@ -43,11 +44,11 @@ class LazyTableModel(QAbstractTableModel):
             return str(section)
         return super().headerData(section, orientation, role)
 
-    def canFetchMore(self, parent=QModelIndex()):
+    def canFetchMore(self, parent=_ROOT):
         if parent.isValid(): return False
         return not self._exhausted
 
-    def fetchMore(self, parent=QModelIndex()):
+    def fetchMore(self, parent=_ROOT):
         if parent.isValid(): return
         batch = 500
         start = len(self._data)
@@ -104,9 +105,7 @@ class SpreadsheetViewer(BaseViewer):
             "application/vnd.oasis.opendocument.spreadsheet"
         ]:
             return True
-        if path.suffix.lower() in [".csv", ".tsv", ".xlsx", ".xlsm", ".xls", ".ods"]:
-            return True
-        return False
+        return path.suffix.lower() in [".csv", ".tsv", ".xlsx", ".xlsm", ".xls", ".ods"]
 
     def load(self, path: Path) -> None:
         self._path = path
@@ -128,7 +127,9 @@ class SpreadsheetViewer(BaseViewer):
                 raise ValueError(f"Unsupported spreadsheet format: {suffix}")
 
     def _load_csv(self, path: Path, suffix: str):
-        self._file_obj = open(path, "r", encoding="utf-8", errors="replace")
+        # Файл держим открытым для лениво читающего reader — контекстный
+        # менеджер здесь не подходит.
+        self._file_obj = open(path, "r", encoding="utf-8", errors="replace")  # noqa: SIM115
         
         # Sniff delimiter
         sample = self._file_obj.read(1024)

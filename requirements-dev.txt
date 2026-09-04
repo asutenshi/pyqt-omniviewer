@@ -1,0 +1,6 @@
+# pyqt-omniviewer — зависимости для разработки и CI (линт, тесты).
+# Рантайм-зависимости — в requirements.txt.
+
+ruff>=0.16
+pytest>=8.0
+pytest-qt>=4.4
