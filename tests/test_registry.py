@@ -10,6 +10,7 @@ from omniviewer.registry import ViewerRegistry
 from omniviewer.viewers.archive import ArchiveViewer
 from omniviewer.viewers.fallback import FallbackViewer
 from omniviewer.viewers.image import ImageViewer
+from omniviewer.viewers.markup import MarkupViewer
 from omniviewer.viewers.media import MediaViewer
 from omniviewer.viewers.pdf import PdfViewer
 from omniviewer.viewers.spreadsheet import SpreadsheetViewer
@@ -71,6 +72,11 @@ FILE_TO_VIEWER = {
     "media/sample.ogg": MediaViewer,
     "media/sample.m4a": MediaViewer,
     "media/sample.opus": MediaViewer,
+    "markup/sample.md": MarkupViewer,
+    "markup/page.html": MarkupViewer,
+    "markup/page.xhtml": MarkupViewer,
+    "markup/saved.mhtml": MarkupViewer,
+    "broken/truncated.mhtml": MarkupViewer,
     "broken/truncated.png": ImageViewer,
     "broken/truncated.jpg": ImageViewer,
     "broken/truncated.svg": ImageViewer,
@@ -136,6 +142,11 @@ PATH_TO_MIME = {
     "media/sample.ogg": "audio/x-vorbis+ogg",
     "media/sample.m4a": "audio/mp4",
     "media/sample.opus": "audio/x-opus+ogg",
+    "markup/sample.md": "text/markdown",
+    "markup/page.html": "text/html",
+    "markup/page.xhtml": "application/xhtml+xml",
+    "markup/saved.mhtml": "multipart/related",
+    "broken/truncated.mhtml": "multipart/related",
     "broken/truncated.png": "image/png",
     "broken/truncated.jpg": "image/jpeg",
     "broken/truncated.svg": "image/svg+xml",
@@ -290,6 +301,10 @@ def test_expected_mime(rel_path):
         assert mime in ["application/gzip", "application/x-gzip", "application/x-compressed-tar"]
     elif rel_path == "archives/sample.ar":
         assert mime in ["application/x-archive", "application/x-unix-archive"]
+    elif rel_path == "markup/sample.md":
+        assert mime in ["text/markdown", "text/x-markdown", "text/plain"]
+    elif rel_path.endswith(".mhtml"):
+        assert mime in ["multipart/related", "application/x-mimearchive", "message/rfc822"]
     else:
         assert mime == expected_mime, f"Expected {expected_mime} for {rel_path}, got {mime}"
 

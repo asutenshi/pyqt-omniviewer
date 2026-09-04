@@ -482,6 +482,83 @@ def _nested_zip_bytes() -> bytes:
     return outer.getvalue()
 
 
+_MARKDOWN_SAMPLE = """\
+# Демонстрация Markdown
+
+Абзац с **жирным**, *курсивом* и `кодом` внутри строки.
+
+## Список
+
+- первый пункт
+- второй пункт
+  - вложенный пункт
+
+## Таблица
+
+| формат | движок |
+|--------|--------|
+| Markdown | markdown-it-py |
+| HTML | QTextBrowser |
+
+## Блок кода
+
+```python
+def greet(name: str) -> str:
+    return f"Привет, {name}!"
+```
+
+> Цитата в конце документа.
+"""
+
+_HTML_SAMPLE = """\
+<!DOCTYPE html>
+<html lang="ru">
+<head><meta charset="utf-8"><title>Демонстрация HTML</title></head>
+<body>
+  <h1>Заголовок страницы</h1>
+  <p>Обычный абзац с <a href="https://example.org">внешней ссылкой</a>,
+     которая в офлайн-просмотрщике никуда не ведёт.</p>
+  <ul><li>пункт один</li><li>пункт два</li></ul>
+  <table border="1"><tr><th>A</th><th>B</th></tr><tr><td>1</td><td>2</td></tr></table>
+</body>
+</html>
+"""
+
+_XHTML_SAMPLE = """\
+<?xml version="1.0" encoding="UTF-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ru">
+<head><title>Демонстрация XHTML</title></head>
+<body>
+  <h1>XHTML-документ</h1>
+  <p>Строгая разметка, показывается тем же движком rich text.</p>
+</body>
+</html>
+"""
+
+
+def _mhtml_bytes() -> bytes:
+    """MHTML (``multipart/related``) с инлайновой картинкой; детерминированный."""
+    from email.mime.image import MIMEImage
+    from email.mime.multipart import MIMEMultipart
+    from email.mime.text import MIMEText
+
+    html = (
+        "<!DOCTYPE html>\n"
+        '<html lang="ru"><head><meta charset="utf-8"><title>Сохранённая страница</title></head>\n'
+        "<body><h1>Сохранённая страница</h1>\n"
+        "<p>Картинка ниже подгружается из тела MHTML, а не из сети:</p>\n"
+        '<img src="swatch.png" alt="образец">\n'
+        "</body></html>\n"
+    )
+    root = MIMEMultipart("related", boundary="----=_omniviewer_mhtml_demo")
+    root["Subject"] = "pyqt-omniviewer MHTML sample"
+    root.attach(MIMEText(html, "html", "utf-8"))
+    img = MIMEImage(_swatch_png(), "png")
+    img.add_header("Content-Location", "swatch.png")
+    root.attach(img)
+    return root.as_bytes()
+
+
 def build(dest: Path) -> list[Path]:
     """Наполнить ``dest`` всеми скриптуемыми образцами. Идемпотентно.
 
@@ -542,6 +619,11 @@ def build(dest: Path) -> list[Path]:
         _write(dest / "archives/sample.tar.gz", _tar_gz_bytes()),
         _write(dest / "archives/sample.ar", _ar_bytes()),
         _write(dest / "archives/nested.zip", _nested_zip_bytes()),
+        # Разметка: Markdown / HTML / XHTML / MHTML (общий шов «→ HTML → QTextBrowser»).
+        _write(dest / "markup/sample.md", _MARKDOWN_SAMPLE),
+        _write(dest / "markup/page.html", _HTML_SAMPLE),
+        _write(dest / "markup/page.xhtml", _XHTML_SAMPLE),
+        _write(dest / "markup/saved.mhtml", _mhtml_bytes()),
         # «Битые» образцы: обрезки валидных файлов — просмотрщик обязан отдать
         # аккуратный «ошибочный» виджет, а не упасть.
         _write(dest / "broken/truncated.png", png[: len(png) // 2]),
@@ -554,6 +636,7 @@ def build(dest: Path) -> list[Path]:
         _write(dest / "broken/truncated.xlsx", _XLSX[:10]),
         _write(dest / "broken/truncated.heic", _HEIC_SAMPLE[: len(_HEIC_SAMPLE) // 3]),
         _write(dest / "broken/truncated.zip", sample_zip[:24]),
+        _write(dest / "broken/truncated.mhtml", _mhtml_bytes()[:90]),
     ]
     return sorted(written)
 
