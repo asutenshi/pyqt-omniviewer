@@ -81,7 +81,13 @@ def _human_size(nbytes: int) -> str:
 class MailViewer(BaseViewer):
     mime_types = tuple(_EML_MIMES | _MSG_MIMES)
     extensions = _EML_SUFFIXES + _MSG_SUFFIXES
-    priority = 30
+    # Выше DocumentViewer(30): .msg — OLE-контейнер, как и legacy .doc, и на
+    # Linux content-sniffing (shared-mime-info) распознаёт его только как общий
+    # родитель `application/x-ole-storage` — тот же MIME, что ловит DocumentViewer
+    # для .doc. При равном приоритете и совпадении по этому MIME побеждал бы
+    # DocumentViewer (регистрируется раньше). Расширение .msg/.eml — однозначный
+    # сигнал, поэтому MailViewer должен выигрывать этот тай-брейк.
+    priority = 31
 
     ## @brief Испущен при двойном клике по вложению — имя вложения.
     attachment_activated = pyqtSignal(str)

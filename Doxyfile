@@ -11,10 +11,14 @@ GENERATE_HTML          = YES
 GENERATE_LATEX         = NO
 HTML_OUTPUT            = html
 
-INPUT                  = omniviewer README.md SPEC.md
+INPUT                  = src/omniviewer README.md SPEC.md
 FILE_PATTERNS          = *.py *.md
 RECURSIVE              = YES
 USE_MDFILE_AS_MAINPAGE = README.md
+
+# Графы через graphviz — внешний бинарник, не ставим (см. «строго in-process»
+# и «без внешних фильтров» в CLAUDE.md/SPEC.md).
+HAVE_DOT               = NO
 
 OPTIMIZE_OUTPUT_JAVA   = YES
 EXTENSION_MAPPING      = py=Python
