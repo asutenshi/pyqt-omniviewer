@@ -16,6 +16,8 @@
 |---|---|---|---|
 | `images/swatch.png` | PNG 32×32 | сгенерирован `demo/generate.py` (stdlib `zlib`) | CC0 1.0 |
 | `images/swatch.jpg` | JPEG 16×16 | сгенерирован однократно, вложён в `generate.py` как base64 | CC0 1.0 |
+| `media/sample.{mp4,mkv,avi,webm,mov}` | короткие видео (~1 с) | синтетический тест-сигнал FFmpeg, сгенерированы однократно, вложены в `generate.py` как base64 | CC0 1.0 |
+| `media/sample.{mp3,flac,wav,ogg,m4a,opus}` | короткое аудио (~1 с) | синтетический тон FFmpeg, сгенерированы однократно, вложены в `generate.py` как base64 | CC0 1.0 |
 
 ## Как добавлять новые образцы
 

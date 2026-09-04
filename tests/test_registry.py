@@ -52,9 +52,15 @@ FILE_TO_VIEWER = {
     "noext/hello-script": TextViewer,
     "media/sample.mp4": MediaViewer,
     "media/sample.mkv": MediaViewer,
+    "media/sample.avi": MediaViewer,
+    "media/sample.webm": MediaViewer,
+    "media/sample.mov": MediaViewer,
     "media/sample.mp3": MediaViewer,
+    "media/sample.flac": MediaViewer,
     "media/sample.wav": MediaViewer,
+    "media/sample.ogg": MediaViewer,
     "media/sample.m4a": MediaViewer,
+    "media/sample.opus": MediaViewer,
     "broken/truncated.png": ImageViewer,
     "broken/truncated.jpg": ImageViewer,
     "broken/truncated.svg": ImageViewer,
@@ -101,9 +107,15 @@ PATH_TO_MIME = {
     "noext/hello-script": "application/octet-stream", # Без расширения пока octet-stream
     "media/sample.mp4": "video/mp4",
     "media/sample.mkv": "video/x-matroska",
+    "media/sample.avi": "video/vnd.avi",
+    "media/sample.webm": "video/webm",
+    "media/sample.mov": "video/quicktime",
     "media/sample.mp3": "audio/mpeg",
+    "media/sample.flac": "audio/flac",
     "media/sample.wav": "audio/vnd.wave",
+    "media/sample.ogg": "audio/x-vorbis+ogg",
     "media/sample.m4a": "audio/mp4",
+    "media/sample.opus": "audio/x-opus+ogg",
     "broken/truncated.png": "image/png",
     "broken/truncated.jpg": "image/jpeg",
     "broken/truncated.svg": "image/svg+xml",
@@ -237,6 +249,12 @@ def test_expected_mime(rel_path):
         assert mime in ["audio/vnd.wave", "audio/x-wav"]
     elif rel_path == "media/sample.m4a":
         assert mime in ["audio/mp4", "audio/x-m4a"]
+    elif rel_path == "media/sample.avi":
+        assert mime in ["video/vnd.avi", "video/x-msvideo", "video/avi"]
+    elif rel_path == "media/sample.ogg":
+        assert mime in ["audio/x-vorbis+ogg", "audio/ogg"]
+    elif rel_path == "media/sample.opus":
+        assert mime in ["audio/x-opus+ogg", "audio/ogg", "audio/opus"]
     elif rel_path == "data/settings.ini":
         assert mime in ["application/octet-stream", "text/plain"]
     else:

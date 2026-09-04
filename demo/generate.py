@@ -357,16 +357,6 @@ def build(dest: Path) -> list[Path]:
     catalog_xml = _CATALOG_XML
     pdf = _write_minimal_pdf()
     mp4 = _MP4
-    mkv = _MKV
-    avi = _AVI
-    webm = _WEBM
-    mov = _MOV
-    mp3 = _MP3
-    flac = _FLAC
-    wav = _WAV
-    ogg = _OGG
-    m4a = _M4A
-    opus = _OPUS
 
     written = [
         _write(dest / "text/plain-en.txt", _PLAIN_EN),
@@ -392,11 +382,19 @@ def build(dest: Path) -> list[Path]:
         _write(dest / "books/sample.xps", _write_minimal_xps()),
         _write(dest / "large/big-lines.txt", _big_text_bytes()),
         _write(dest / "noext/hello-script", _SHEBANG_SCRIPT),
+        # Видео: по одному короткому образцу на контейнер, который умеет MediaViewer.
         _write(dest / "media/sample.mp4", mp4),
-        _write(dest / "media/sample.mkv", mkv),
-        _write(dest / "media/sample.mp3", mp3),
-        _write(dest / "media/sample.wav", wav),
-        _write(dest / "media/sample.m4a", m4a),
+        _write(dest / "media/sample.mkv", _MKV),
+        _write(dest / "media/sample.avi", _AVI),
+        _write(dest / "media/sample.webm", _WEBM),
+        _write(dest / "media/sample.mov", _MOV),
+        # Аудио: контейнеры с тегами и (где есть) обложкой.
+        _write(dest / "media/sample.mp3", _MP3),
+        _write(dest / "media/sample.flac", _FLAC),
+        _write(dest / "media/sample.wav", _WAV),
+        _write(dest / "media/sample.ogg", _OGG),
+        _write(dest / "media/sample.m4a", _M4A),
+        _write(dest / "media/sample.opus", _OPUS),
         # «Битые» образцы: обрезки валидных файлов — просмотрщик обязан отдать
         # аккуратный «ошибочный» виджет, а не упасть.
         _write(dest / "broken/truncated.png", png[: len(png) // 2]),
@@ -405,7 +403,7 @@ def build(dest: Path) -> list[Path]:
         _write(dest / "broken/truncated.xml", catalog_xml[:80]),
         _write(dest / "broken/truncated.pdf", pdf[: 10]),
         _write(dest / "broken/truncated.mp4", mp4[:10]),
-        _write(dest / "broken/truncated.mp3", mp3[:10]),
+        _write(dest / "broken/truncated.mp3", _MP3[:10]),
         _write(dest / "broken/truncated.xlsx", _XLSX[:10]),
     ]
     return sorted(written)
