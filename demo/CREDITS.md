@@ -40,8 +40,8 @@
 | `documents/sample.doc` | DOC (legacy OLE2) | `demo/generate.py` (минимальный OLE2 с потоком WordDocument) | CC0 1.0 |
 | `documents/sample.odt` | ODT (ODF Text) | сгенерирован однократно через `odfpy`, вложен в `generate.py` как base64 | CC0 1.0 |
 | `documents/sample.rtf` | RTF | `demo/generate.py` (чистый текст с разметкой RTF) | CC0 1.0 |
-| `fonts/sample.ttf` | TrueType, 84 глифа | построен однократно через `fontTools.fontBuilder`, вложён в `generate.py` как base64 | CC0 1.0 |
-| `fonts/sample.otf` | OpenType/CFF, 84 глифа | построен однократно через `fontTools.fontBuilder`, вложён в `generate.py` как base64 | CC0 1.0 |
+| `fonts/sample.ttf` | TrueType, 84 глифа; глифы-заглушки — контурные прямоугольники (□) | построен однократно через `fontTools.fontBuilder`, вложён в `generate.py` как base64 | CC0 1.0 |
+| `fonts/sample.otf` | OpenType/CFF, 84 глифа; глифы-заглушки — контурные прямоугольники (□), как у демо-TTF | построен однократно через `fontTools.fontBuilder`, очертания CFF позже переписаны на контурные, вложён в `generate.py` как base64 | CC0 1.0 |
 | `fonts/sample.woff` | WOFF (тот же TTF в web-обёртке) | `fontTools` (`flavor="woff"`), вложён в `generate.py` как base64 | CC0 1.0 |
 | `fonts/sample.woff2` | WOFF2 (тот же TTF, brotli) | `fontTools` (`flavor="woff2"`), вложён в `generate.py` как base64 | CC0 1.0 |
 | `mail/sample.msg` | Outlook MSG (минимальный CFBF/OLE2) | собран вручную скриптом (CFBF с мини-FAT, stdlib `struct`), вложён в `generate.py` как base64 | CC0 1.0 |
