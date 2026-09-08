@@ -187,3 +187,143 @@ def test_current_changed_emits_file_selected(qapp, tmp_path, monkeypatch):
     )
     assert received == [tmp_path / "a.txt"]
 
+
+
+# ─── Миниатюры в дереве ─────────────────────────────────────────────────────
+
+
+def _prepare(tmp_path, monkeypatch, thumbnail_mode: bool):
+    """Изолированные настройки и кэш + папка с одной картинкой."""
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
+    monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path / "cache"))
+    from omniviewer.settings import AppSettings
+
+    settings = AppSettings()
+    settings._settings.clear()
+    settings.thumbnail_mode = thumbnail_mode
+
+    demo_png = Path(__file__).resolve().parent.parent / "demo/images/swatch.png"
+    workdir = tmp_path / "files"
+    workdir.mkdir()
+    target = workdir / "swatch.png"
+    target.write_bytes(demo_png.read_bytes())
+    return workdir, target
+
+
+def _index_for(panel, path: Path):
+    source_index = panel.source_model.index(str(path))
+    assert source_index.isValid(), "файл ещё не виден модели"
+    return panel.proxy_model.mapFromSource(source_index)
+
+
+def test_thumbnail_toggle_reflects_saved_setting(qapp, tmp_path, monkeypatch):
+    workdir, _ = _prepare(tmp_path, monkeypatch, thumbnail_mode=True)
+
+    panel = FileTreePanel(workdir)
+
+    assert panel.thumbnail_toggle.isChecked() is True
+    assert panel.thumbnails.enabled is True
+
+
+def test_thumbnail_toggle_saves_state(qapp, tmp_path, monkeypatch):
+    from omniviewer.settings import AppSettings
+
+    workdir, _ = _prepare(tmp_path, monkeypatch, thumbnail_mode=False)
+    panel = FileTreePanel(workdir)
+    assert panel.thumbnails.enabled is False
+
+    panel.thumbnail_toggle.setChecked(True)
+
+    assert panel.thumbnails.enabled is True
+    assert AppSettings().thumbnail_mode is True
+
+    panel.thumbnail_toggle.setChecked(False)
+    assert panel.thumbnails.enabled is False
+    assert AppSettings().thumbnail_mode is False
+
+
+def test_tree_shows_thumbnail_when_enabled(qapp, qtbot, tmp_path, monkeypatch):
+    workdir, target = _prepare(tmp_path, monkeypatch, thumbnail_mode=True)
+    panel = FileTreePanel(workdir)
+    qtbot.waitUntil(lambda: panel.source_model.index(str(target)).isValid(), timeout=10000)
+
+    # Первое обращение неблокирующее: иконка пока системная, задача — в очереди.
+    panel.proxy_model.data(_index_for(panel, target), Qt.ItemDataRole.DecorationRole)
+    assert panel.thumbnails.pending_count() == 1
+
+    with qtbot.waitSignal(panel.thumbnails.thumbnail_ready, timeout=10000):
+        pass
+
+    # Индекс берём заново: после dataChanged прокси перевычисляет строку.
+    icon = panel.proxy_model.data(_index_for(panel, target), Qt.ItemDataRole.DecorationRole)
+    assert icon is not None and not icon.isNull()
+
+    expected = panel.thumbnails.thumbnail_for(target)
+    assert expected is not None
+    shown = icon.pixmap(expected.size()).toImage()
+    assert shown == expected.toImage()
+
+
+def test_tree_keeps_system_icons_when_disabled(qapp, qtbot, tmp_path, monkeypatch):
+    workdir, target = _prepare(tmp_path, monkeypatch, thumbnail_mode=False)
+    panel = FileTreePanel(workdir)
+    qtbot.waitUntil(lambda: panel.source_model.index(str(target)).isValid(), timeout=10000)
+
+    index = _index_for(panel, target)
+    icon = panel.proxy_model.data(index, Qt.ItemDataRole.DecorationRole)
+
+    # Иконка приходит от QFileSystemModel, фоновая работа не начиналась.
+    source_icon = panel.source_model.data(
+        panel.proxy_model.mapToSource(index), Qt.ItemDataRole.DecorationRole
+    )
+    assert icon.name() == source_icon.name()
+    assert panel.thumbnails.pending_count() == 0
+    assert panel.thumbnails.thumbnail_for(target) is None
+
+
+def test_directories_never_get_thumbnails(qapp, tmp_path, monkeypatch):
+    workdir, _ = _prepare(tmp_path, monkeypatch, thumbnail_mode=True)
+    (workdir / "subdir").mkdir()
+    panel = FileTreePanel(workdir)
+
+    panel.proxy_model.data(
+        _index_for(panel, workdir / "subdir"), Qt.ItemDataRole.DecorationRole
+    )
+    assert panel.thumbnails.pending_count() == 0
+
+
+def test_changing_directory_drops_pending_thumbnails(qapp, tmp_path, monkeypatch):
+    workdir, target = _prepare(tmp_path, monkeypatch, thumbnail_mode=True)
+    other = tmp_path / "other"
+    other.mkdir()
+    panel = FileTreePanel(workdir)
+
+    panel.thumbnails.thumbnail_for(target)
+    panel.set_root_path(other)
+
+    assert panel.thumbnails.pending_count() == 0
+
+
+def test_tree_does_not_block_on_missing_thumbnail(qapp, qtbot, tmp_path, monkeypatch):
+    """Отрисовка строки не ждёт миниатюру: модель отвечает сразу, работа уходит в фон."""
+    workdir, _ = _prepare(tmp_path, monkeypatch, thumbnail_mode=True)
+    demo_png = (Path(__file__).resolve().parent.parent / "demo/images/swatch.png").read_bytes()
+    for i in range(30):
+        (workdir / f"copy{i:02d}.png").write_bytes(demo_png)
+
+    panel = FileTreePanel(workdir)
+    qtbot.waitUntil(
+        lambda: panel.proxy_model.rowCount(panel.tree_view.rootIndex()) >= 31, timeout=10000
+    )
+
+    root = panel.tree_view.rootIndex()
+    icons = [
+        panel.proxy_model.data(
+            panel.proxy_model.index(row, 0, root), Qt.ItemDataRole.DecorationRole
+        )
+        for row in range(panel.proxy_model.rowCount(root))
+    ]
+
+    # Ни одна миниатюра ещё не готова, но модель уже вернула иконки для всех строк.
+    assert len(icons) == 31
+    assert panel.thumbnails.pending_count() > 0

@@ -1,8 +1,9 @@
 from pathlib import Path
 
-from PyQt6.QtCore import QModelIndex, QSortFilterProxyModel, Qt, pyqtSignal
-from PyQt6.QtGui import QAction, QActionGroup, QFileSystemModel
+from PyQt6.QtCore import QModelIndex, QSize, QSortFilterProxyModel, Qt, pyqtSignal
+from PyQt6.QtGui import QAction, QActionGroup, QFileSystemModel, QIcon
 from PyQt6.QtWidgets import (
+    QCheckBox,
     QHBoxLayout,
     QLineEdit,
     QMenu,
@@ -14,19 +15,77 @@ from PyQt6.QtWidgets import (
 )
 
 from omniviewer.settings import AppSettings
+from omniviewer.thumbnails import ThumbnailManager
+
+## @brief Сторона иконки в дереве, когда включён режим миниатюр.
+THUMBNAIL_ICON_SIZE = 48
+## @brief Границы ширины колонки «Имя», чтобы миниатюра не срезала названия.
+MIN_NAME_COLUMN_WIDTH = 220
+MAX_NAME_COLUMN_WIDTH = 420
 
 
 ## @brief Прокси-модель для дерева файлов.
 #
 # Обеспечивает фильтрацию по подстроке имени (без учета регистра)
 # и гарантирует, что папки всегда отображаются сверху независимо от сортировки.
+# Если передан менеджер миниатюр, подменяет системную иконку файла на превью —
+# но только когда оно уже готово: ожидание в модели заблокировало бы прокрутку.
 class TreeProxyModel(QSortFilterProxyModel):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, thumbnails: ThumbnailManager | None = None):
         super().__init__(parent)
         self.folders_first = True
+        self.thumbnails = thumbnails
         self.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         # We want to filter by the first column (Name)
         self.setFilterKeyColumn(0)
+
+    def data(self, index: QModelIndex, role: int = Qt.ItemDataRole.DisplayRole):
+        if (
+            role == Qt.ItemDataRole.DecorationRole
+            and index.isValid()
+            and index.column() == 0
+            and self.thumbnails is not None
+            and self.thumbnails.enabled
+        ):
+            pixmap = self._thumbnail_for(index)
+            if pixmap is not None:
+                return QIcon(pixmap)
+        return super().data(index, role)
+
+    def _thumbnail_for(self, index: QModelIndex):
+        source_model = self.sourceModel()
+        if not isinstance(source_model, QFileSystemModel):
+            return None
+        source_index = self.mapToSource(index)
+        if not source_index.isValid() or source_model.isDir(source_index):
+            return None
+        return self.thumbnails.thumbnail_for(source_model.filePath(source_index))
+
+    ## @brief Перерисовать иконки видимых строк (миниатюра готова / режим переключён).
+    def refresh_decorations(self, parent: QModelIndex | None = None) -> None:
+        parent = QModelIndex() if parent is None else parent
+        rows = self.rowCount(parent)
+        if rows <= 0:
+            return
+        self.dataChanged.emit(
+            self.index(0, 0, parent),
+            self.index(rows - 1, 0, parent),
+            [Qt.ItemDataRole.DecorationRole],
+        )
+
+    ## @brief Обновить одну строку, для которой миниатюра только что построена.
+    def notify_thumbnail_ready(self, path: str) -> None:
+        source_model = self.sourceModel()
+        if not isinstance(source_model, QFileSystemModel):
+            return
+        source_index = source_model.index(path)
+        if not source_index.isValid():
+            return
+        proxy_index = self.mapFromSource(source_index)
+        if proxy_index.isValid():
+            self.dataChanged.emit(
+                proxy_index, proxy_index, [Qt.ItemDataRole.DecorationRole]
+            )
 
     def filterAcceptsRow(self, source_row: int, source_parent: QModelIndex) -> bool:
         source_model = self.sourceModel()
@@ -114,6 +173,16 @@ class FileTreePanel(QWidget):
         self.btn_sort.setMenu(self._create_sort_menu())
         filter_layout.addWidget(self.btn_sort)
 
+        # Режим миниатюр: состояние восстанавливается из QSettings и туда же пишется.
+        self.thumbnails = ThumbnailManager(enabled=self.settings.thumbnail_mode)
+        self.thumbnail_toggle = QCheckBox("Миниатюры")
+        self.thumbnail_toggle.setToolTip(
+            "Показывать превью изображений, кадр видео и первую страницу PDF"
+        )
+        self.thumbnail_toggle.setChecked(self.settings.thumbnail_mode)
+        self.thumbnail_toggle.toggled.connect(self.set_thumbnails_enabled)
+        filter_layout.addWidget(self.thumbnail_toggle)
+
         layout.addLayout(filter_layout)
 
         # 3. Tree View
@@ -127,8 +196,9 @@ class FileTreePanel(QWidget):
         self.source_model.setReadOnly(True)
         # Watcher should be active. QFileSystemModel automatically uses QFileSystemWatcher.
 
-        self.proxy_model = TreeProxyModel(self)
+        self.proxy_model = TreeProxyModel(self, thumbnails=self.thumbnails)
         self.proxy_model.setSourceModel(self.source_model)
+        self.thumbnails.thumbnail_ready.connect(self.proxy_model.notify_thumbnail_ready)
 
         self.tree_view.setModel(self.proxy_model)
         # Реагируем на смену текущего элемента — это покрывает и клик мышью,
@@ -138,6 +208,29 @@ class FileTreePanel(QWidget):
         
         layout.addWidget(self.tree_view)
         self._apply_sorting()
+        self._apply_icon_size()
+
+    ## @brief Включить/выключить режим миниатюр.
+    #
+    # Выключение снимает всю фоновую работу и возвращает системные иконки.
+    def set_thumbnails_enabled(self, enabled: bool) -> None:
+        enabled = bool(enabled)
+        self.settings.thumbnail_mode = enabled
+        self.thumbnails.set_enabled(enabled)
+        if self.thumbnail_toggle.isChecked() != enabled:
+            self.thumbnail_toggle.setChecked(enabled)
+        self._apply_icon_size()
+        self.proxy_model.refresh_decorations(self.tree_view.rootIndex())
+
+    def _apply_icon_size(self) -> None:
+        size = THUMBNAIL_ICON_SIZE if self.thumbnails.enabled else -1
+        self.tree_view.setIconSize(QSize(size, size))
+        # Крупная иконка съедает колонку с именем — подгоняем её ширину под
+        # содержимое, но не даём растянуться на всю панель.
+        self.tree_view.resizeColumnToContents(0)
+        self.tree_view.setColumnWidth(
+            0, min(max(self.tree_view.columnWidth(0), MIN_NAME_COLUMN_WIDTH), MAX_NAME_COLUMN_WIDTH)
+        )
 
     def _create_sort_menu(self) -> QMenu:
         menu = QMenu(self)
@@ -217,6 +310,10 @@ class FileTreePanel(QWidget):
             self.history_forward.clear()
             self._update_nav_buttons()
             
+        # Хвост задач по прошлой папке уже не нужен — снимаем, чтобы очередь
+        # не отъедала потоки под невидимые файлы.
+        self.thumbnails.clear_queue()
+
         self.current_path = path
         self.address_bar.setText(path_str)
         
