@@ -259,3 +259,98 @@ def test_not_a_font_yields_error_widget(tmp_path) -> None:
     viewer = FontViewer()
     viewer.safe_load(p)
     assert viewer.is_error_widget
+
+
+# --------------------------------------------------------------------------- #
+# Демо-корпус: sample.otf                                                     #
+# --------------------------------------------------------------------------- #
+
+DEMO_FONTS = Path(__file__).resolve().parent.parent / "demo/fonts"
+
+
+def _contours(font_path: Path, glyph_name: str) -> list[list[tuple]]:
+    """Контуры глифа списком: каждый — последовательность точек ``moveTo``/``lineTo``."""
+    from fontTools.pens.recordingPen import RecordingPen
+
+    font = TTFont(str(font_path))
+    pen = RecordingPen()
+    font.getGlyphSet()[glyph_name].draw(pen)
+
+    contours: list[list[tuple]] = []
+    for op, args in pen.value:
+        if op == "moveTo":
+            contours.append([args[0]])
+        elif op in ("lineTo", "curveTo", "qCurveTo"):
+            contours[-1].append(args[-1])
+    return contours
+
+
+def test_demo_otf_glyphs_are_outlined_like_ttf() -> None:
+    """Глифы-заглушки демо-OTF должны быть контурными (□), как в демо-TTF.
+
+    Сплошной прямоугольник (■) в превью читается как «тофу» / битый рендер —
+    именно из-за этого демо-OTF принимали за сломанный.
+    """
+    ttf_contours = _contours(DEMO_FONTS / "sample.ttf", "g0021")
+    otf_contours = _contours(DEMO_FONTS / "sample.otf", "g0021")
+
+    assert len(ttf_contours) == 2, "у демо-TTF глиф всегда был контурным"
+    assert len(otf_contours) == 2, "у демо-OTF глиф остался сплошным"
+    assert {tuple(c) for c in otf_contours} == {tuple(c) for c in ttf_contours}
+
+
+def test_demo_otf_hole_winds_opposite_to_outline() -> None:
+    """Внутренний контур должен идти в обратную сторону — иначе дырки не будет."""
+
+    def signed_area(points: list[tuple]) -> float:
+        total = 0.0
+        for i, (x1, y1) in enumerate(points):
+            x2, y2 = points[(i + 1) % len(points)]
+            total += x1 * y2 - x2 * y1
+        return total / 2
+
+    outer, inner = _contours(DEMO_FONTS / "sample.otf", "g0021")
+    assert signed_area(outer) * signed_area(inner) < 0
+
+
+def test_demo_otf_glyph_set_unchanged() -> None:
+    """Правка касается только очертаний: состав глифов и метрики прежние."""
+    ttf = TTFont(str(DEMO_FONTS / "sample.ttf"))
+    otf = TTFont(str(DEMO_FONTS / "sample.otf"))
+
+    assert otf.sfntVersion == "OTTO"
+    assert otf["maxp"].numGlyphs == ttf["maxp"].numGlyphs == 84
+    assert otf.getGlyphOrder() == ttf.getGlyphOrder()
+    assert otf["hmtx"]["g0021"] == ttf["hmtx"]["g0021"]
+    assert otf["name"].getDebugName(1) == "Omniviewer Serif"
+    assert otf["name"].getDebugName(5) == "Version 1.000"
+
+
+def test_font_viewer_opens_demo_otf(registry) -> None:
+    """Метаданные демо-OTF не изменились: это по-прежнему OpenType/CFF."""
+    path = DEMO_FONTS / "sample.otf"
+    viewer = registry.viewer_for(path)
+    assert isinstance(viewer, FontViewer)
+
+    viewer.safe_load(path)
+    assert not viewer.is_error_widget, viewer.error_message
+    assert viewer.font_family == "Omniviewer Serif"
+    assert viewer.glyph_count == 84
+    assert viewer.metadata["Тип контуров"] == "PostScript / CFF"
+    assert viewer.metadata["Формат файла"] == "OTF"
+
+
+def test_demo_otf_matches_generator_output(tmp_path) -> None:
+    """demo/generate.py воспроизводит ровно тот файл, что лежит в репозитории."""
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "demo_generate_font", DEMO_FONTS.parent / "generate.py"
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+
+    module.build(tmp_path)
+    assert (tmp_path / "fonts/sample.otf").read_bytes() == (
+        DEMO_FONTS / "sample.otf"
+    ).read_bytes()
