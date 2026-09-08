@@ -1,6 +1,7 @@
 import os
 
 
+## @brief Оконное чтение больших файлов — блоками по chunk_size, без загрузки целиком в память.
 class WindowedReader:
     """Утилита для оконного чтения больших файлов."""
     def __init__(self, path: str, chunk_size: int = 5 * 1024 * 1024):

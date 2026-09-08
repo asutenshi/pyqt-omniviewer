@@ -6,6 +6,7 @@ from PyQt6.QtWidgets import QHeaderView, QTableWidget, QTableWidgetItem, QVBoxLa
 from .metadata import metadata_for
 
 
+## @brief Панель свойств файла: таблица «Свойство → Значение» из :func:`omniviewer.metadata.metadata_for`.
 class PropertyPanel(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)

@@ -29,8 +29,9 @@ https://github.com/user-attachments/assets/325a28d6-c7b4-4216-9489-264fbeeb61fc
 
 ## Поддерживаемые форматы
 
-### Работают сейчас
-
+<!-- format-table:start — генерируется из omniviewer.format_catalog.FORMAT_GROUPS,
+     сверяется тестом tests/test_format_catalog.py::test_readme_table_matches_catalog.
+     Правь src/omniviewer/format_catalog.py, а не эту таблицу напрямую. -->
 | Группа | Форматы |
 |---|---|
 | Текст / код | txt, исходный код с подсветкой синтаксиса (py, c, cpp, h, js, html, css, sh, bat, ps1 и др. через Pygments), ini, log, md, csv, tsv — как текст |
@@ -42,21 +43,17 @@ https://github.com/user-attachments/assets/325a28d6-c7b4-4216-9489-264fbeeb61fc
 | Таблицы | XLSX, XLSM, XLS, ODS, CSV, TSV |
 | Офисные документы | DOCX (mammoth → HTML, заголовки/списки/изображения), DOC (olefile — извлечённый текст), ODT (odfpy — структура), RTF (striprtf — текст) |
 | Изображения | PNG, JPEG, GIF, BMP, WebP, TIFF (многостраничный — листание кадров), ICO, SVG, HEIC/HEIF, AVIF, RAW (CR2/CR3/NEF/ARW/DNG/RAF/ORF/RW2 — по встроенному превью-JPEG) |
-| Аудио | MP3, FLAC, WAV, OGG, M4A, Opus |
+| Аудио | MP3, FLAC, WAV, OGG, M4A, Opus — теги и обложка |
 | Видео | MP4, MKV, AVI, WebM, MOV |
 | Шрифты | TTF, OTF, WOFF, WOFF2 — образец начертания (панграммы и алфавит в нескольких кеглях этим шрифтом) + метаданные fontTools (семейство, начертание, версия, число глифов, состав таблиц); WOFF/WOFF2 распаковываются |
 | Почта | EML (stdlib email), MSG (Outlook, extract-msg) — заголовки From/To/Cc/Subject/Date, тело (HTML-часть в QTextBrowser строго офлайн, иначе text/plain), список вложений с открытием тем же приложением |
 | Архивы | ZIP, TAR(.gz/.bz2/.xz), 7Z, RAR, ISO, CAB, LHA, AR — дерево содержимого; двойной клик открывает вложенный файл тем же приложением; вложенные архивы — рекурсивно (с лимитами глубины и суммарного размера, защита от Zip Slip) |
 | Любой другой файл | fallback: текст → hex-дамп + базовые метаданные (размер, MIME, даты); для форматов, которые разбирает hachoir, — ещё и дерево полей (десятки экзотических бинарных типов) |
+<!-- format-table:end -->
 
-### В планах
-
-| Группа | Форматы |
-|---|---|
-| Аудио | теги и обложка в панели свойств |
-| Прочее | дерево полей произвольного бинарного формата (hachoir) |
-
-Список пополняется по мере разработки — полный план см. в [SPEC.md](SPEC.md).
+Тот же список — в диалоге «О программе» (меню «Справка»): оба берутся из одного
+источника, `omniviewer.format_catalog.FORMAT_GROUPS`, поэтому не расходятся.
+Полный план развития — в [SPEC.md](SPEC.md).
 
 ## Установка
 
@@ -106,10 +103,3 @@ xdg-open docs/html/index.html
 ## Лицензия
 
 [AGPL-3.0-or-later](LICENSE) (обусловлено использованием PyMuPDF).
-
-## About
-
-`pyqt-omniviewer` is a two-pane desktop file viewer (PyQt6) aiming to preview as
-many file types as possible, rendering everything in-process without launching
-external applications. Built for a hackathon scored by format coverage. See
-[SPEC.md](SPEC.md) for the full specification.

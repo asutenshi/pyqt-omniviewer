@@ -48,6 +48,11 @@ class ViewerRegistry:
         if viewer_cls not in self._viewers:
             self._viewers.append(viewer_cls)
 
+    @property
+    def registered_viewers(self) -> tuple[type[BaseViewer], ...]:
+        """Все зарегистрированные классы просмотрщиков в порядке регистрации."""
+        return tuple(self._viewers)
+
     def viewer_for(self, path: Path) -> BaseViewer:
         """
         Возвращает экземпляр подходящего BaseViewer для заданного пути.
