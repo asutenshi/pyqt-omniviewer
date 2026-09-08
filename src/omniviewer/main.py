@@ -19,6 +19,7 @@ from PyQt6.QtWidgets import (
 from omniviewer.properties import PropertyPanel
 from omniviewer.registry import default_registry
 from omniviewer.settings import AppSettings
+from omniviewer.thumbnails import shutdown_thumbnails
 from omniviewer.tree import FileTreePanel
 from omniviewer.viewers.base import BaseViewer
 
@@ -200,6 +201,8 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event):
         """Сохранение настроек при закрытии."""
+        # Фоновая очередь миниатюр должна остановиться до разрушения Qt-объектов.
+        shutdown_thumbnails()
         self.settings.window_geometry = self.saveGeometry()
         self.settings.tree_on_left = self.splitter.widget(0) == self.tree_panel
         if self.current_path:
